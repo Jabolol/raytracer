@@ -54,3 +54,8 @@ bool Raytracer::Shapes::Cone::hit(const Core::Ray &ray,
 
     return true;
 }
+
+Raytracer::Utils::AxisAlignedBBox Raytracer::Shapes::Cone::boundingBox() const
+{
+    return _bbox;
+}
