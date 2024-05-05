@@ -1,7 +1,7 @@
 #include <memory>
 #include "core/Camera.hpp"
 #include "core/Scene.hpp"
-#include "effects/Rotate.hpp"
+#include "effects/RotateY.hpp"
 #include "effects/Smoke.hpp"
 #include "effects/Translate.hpp"
 #include "materials/Dielectric.hpp"
@@ -42,8 +42,8 @@ int main(int argc, char **argv)
         Raytracer::Utils::Point3(0, 0, 0), Raytracer::Utils::Vec3(0, 555, 0),
         Raytracer::Utils::Vec3(0, 0, 555), red));
     world.add(std::make_shared<Raytracer::Shapes::Quad>(
-        Raytracer::Utils::Point3(343, 554, 332),
-        Raytracer::Utils::Vec3(-130, 0, 0), Raytracer::Utils::Vec3(0, 0, -105),
+        Raytracer::Utils::Point3(113, 554, 127),
+        Raytracer::Utils::Vec3(330, 0, 0), Raytracer::Utils::Vec3(0, 0, 305),
         light));
     world.add(std::make_shared<Raytracer::Shapes::Quad>(
         Raytracer::Utils::Point3(0, 0, 0), Raytracer::Utils::Vec3(555, 0, 0),
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     std::shared_ptr<Raytracer::Interfaces::IHittable> box1 =
         Raytracer::Shapes::box(Raytracer::Utils::Point3(0, 0, 0),
             Raytracer::Utils::Point3(165, 330, 165), metal);
-    box1 = std::make_shared<Raytracer::Effects::Rotate>(box1, 15);
+    box1 = std::make_shared<Raytracer::Effects::RotateY>(box1, 15);
     box1 = std::make_shared<Raytracer::Effects::Translate>(
         box1, Raytracer::Utils::Vec3(265, 0, 295));
     world.add(box1);
