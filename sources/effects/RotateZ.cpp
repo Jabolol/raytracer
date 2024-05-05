@@ -1,6 +1,6 @@
-#include "effects/Rotate.hpp"
+#include "effects/RotateZ.hpp"
 
-Raytracer::Effects::Rotate::Rotate(
+Raytracer::Effects::RotateZ::RotateZ(
     std::shared_ptr<Interfaces::IHittable> object, double angle)
     : _object(object)
 {
@@ -21,10 +21,10 @@ Raytracer::Effects::Rotate::Rotate(
                 double y = j * _bbox.y().max() + (1 - j) * _bbox.y().min();
                 double z = k * _bbox.z().max() + (1 - k) * _bbox.z().min();
 
-                double newX = _cosTheta * x + _sinTheta * z;
-                double newZ = -_sinTheta * x + _cosTheta * z;
+                double newX = _cosTheta * x - _sinTheta * y;
+                double newY = _sinTheta * x + _cosTheta * y;
 
-                Utils::Vec3 temp(newX, y, newZ);
+                Utils::Vec3 temp(newX, newY, z);
 
                 for (int l = 0; l < 3; l++) {
                     min[l] = std::fmin(min[l], temp[l]);
@@ -36,19 +36,19 @@ Raytracer::Effects::Rotate::Rotate(
     _bbox = Utils::AxisAlignedBBox(min, max);
 }
 
-bool Raytracer::Effects::Rotate::hit(const Core::Ray &ray,
+bool Raytracer::Effects::RotateZ::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
     Utils::Vec3 origin = ray.origin();
     Utils::Vec3 direction = ray.direction();
 
-    origin[0] = _cosTheta * ray.origin().x() - _sinTheta * ray.origin().z();
-    origin[2] = _sinTheta * ray.origin().x() + _cosTheta * ray.origin().z();
+    origin[0] = _cosTheta * ray.origin().x() - _sinTheta * ray.origin().y();
+    origin[1] = _sinTheta * ray.origin().x() + _cosTheta * ray.origin().y();
 
     direction[0] =
-        _cosTheta * ray.direction().x() - _sinTheta * ray.direction().z();
-    direction[2] =
-        _sinTheta * ray.direction().x() + _cosTheta * ray.direction().z();
+        _cosTheta * ray.direction().x() - _sinTheta * ray.direction().y();
+    direction[1] =
+        _sinTheta * ray.direction().x() + _cosTheta * ray.direction().y();
 
     Core::Ray rotated = Core::Ray(origin, direction, ray.time());
 
@@ -58,15 +58,15 @@ bool Raytracer::Effects::Rotate::hit(const Core::Ray &ray,
 
     Utils::Point3 point = payload.point();
     point[0] =
-        _cosTheta * payload.point().x() + _sinTheta * payload.point().z();
-    point[2] =
-        -_sinTheta * payload.point().x() + _cosTheta * payload.point().z();
+        _cosTheta * payload.point().x() - _sinTheta * payload.point().y();
+    point[1] =
+        _sinTheta * payload.point().x() + _cosTheta * payload.point().y();
 
     Utils::Vec3 normal = payload.normal();
     normal[0] =
-        _cosTheta * payload.normal().x() + _sinTheta * payload.normal().z();
-    normal[2] =
-        -_sinTheta * payload.normal().x() + _cosTheta * payload.normal().z();
+        _cosTheta * payload.normal().x() - _sinTheta * payload.normal().y();
+    normal[1] =
+        _sinTheta * payload.normal().x() + _cosTheta * payload.normal().y();
 
     payload.point(point);
     payload.normal(normal);
@@ -75,7 +75,7 @@ bool Raytracer::Effects::Rotate::hit(const Core::Ray &ray,
 }
 
 Raytracer::Utils::AxisAlignedBBox
-Raytracer::Effects::Rotate::boundingBox() const
+Raytracer::Effects::RotateZ::boundingBox() const
 {
     return _bbox;
 }

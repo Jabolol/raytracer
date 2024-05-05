@@ -5,7 +5,7 @@
 
 namespace Raytracer::Effects
 {
-    class Rotate : public Interfaces::IHittable {
+    class RotateZ : public Interfaces::IHittable {
       private:
         std::shared_ptr<Interfaces::IHittable> _object;
         double _sinTheta;
@@ -13,7 +13,7 @@ namespace Raytracer::Effects
         Utils::AxisAlignedBBox _bbox;
 
       public:
-        Rotate(std::shared_ptr<Interfaces::IHittable> object, double angle);
+        RotateZ(std::shared_ptr<Interfaces::IHittable> object, double angle);
         bool hit(const Core::Ray &ray, Utils::Interval interval,
             Core::Payload &payload) const override;
         Utils::AxisAlignedBBox boundingBox() const override;
