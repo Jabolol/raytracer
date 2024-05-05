@@ -43,4 +43,4 @@
 - [x] space partitioning (2)
 - [ ] display the image during and after rendering (1)
 - [ ] exit during or after rendering (0.5)
-- [ ] scene preview using a fast renderer (2)
+- [x] scene preview using a fast renderer (2)
