@@ -1,3 +1,4 @@
+#include <memory>
 #include "interfaces/IHittable.hpp"
 
 #ifndef __CONE_HPP__
