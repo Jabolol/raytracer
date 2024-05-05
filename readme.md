@@ -28,7 +28,7 @@
 ## could
 
 > [!NOTE]\
-> These would give up to `14.5` bonus points.
+> These would give up to `13` bonus points.
 
 - [x] multiple directional lights (0.5)
 - [x] colored lights (0.5)
@@ -41,6 +41,4 @@
 - [ ] import a scene in a scene (2)
 - [x] set up antialiasing through supersampling (0.5)
 - [x] space partitioning (2)
-- [ ] display the image during and after rendering (1)
-- [ ] exit during or after rendering (0.5)
 - [x] scene preview using a fast renderer (2)
