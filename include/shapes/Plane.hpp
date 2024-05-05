@@ -1,4 +1,4 @@
-#include <memory.h>
+#include <memory>
 #include "interfaces/IHittable.hpp"
 #include "utils/VecN.hpp"
 
