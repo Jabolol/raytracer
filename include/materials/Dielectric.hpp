@@ -8,9 +8,11 @@ namespace Raytracer::Materials
     class Dielectric : public Interfaces::IMaterial {
       private:
         double _refractionIndex;
+        Utils::Color _albedo = Utils::Color(1.0, 1.0, 1.0);
 
       public:
-        Dielectric(double refraction_index);
+        Dielectric(double refractionIndex);
+        Dielectric(double refractionIndex, const Utils::Color &albedo);
         bool scatter(const Core::Ray &ray, const Core::Payload &payload,
             Utils::Color &attenuation, Core::Ray &scattered) const override;
         Utils::Color emitted(

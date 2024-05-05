@@ -8,11 +8,17 @@ Raytracer::Materials::Dielectric::Dielectric(double refractionIndex)
 {
 }
 
+Raytracer::Materials::Dielectric::Dielectric(
+    double refractionIndex, const Utils::Color &albedo)
+    : _refractionIndex(refractionIndex), _albedo(albedo)
+{
+}
+
 bool Raytracer::Materials::Dielectric::scatter(const Core::Ray &ray,
     const Core::Payload &payload, Utils::Color &attenuation,
     Core::Ray &scattered) const
 {
-    attenuation = Utils::Color(1.0, 1.0, 1.0);
+    attenuation = _albedo;
     double ri =
         payload.frontFace() ? (1.0 / _refractionIndex) : _refractionIndex;
 
