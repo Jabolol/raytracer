@@ -42,3 +42,10 @@
 - [x] set up antialiasing through supersampling (0.5)
 - [x] space partitioning (2)
 - [x] scene preview using a fast renderer (2)
+
+## bonus
+
+- [x] motion blur
+- [x] depth of field
+- [x] quadrilaterals
+- [x] constant medium (fog)
