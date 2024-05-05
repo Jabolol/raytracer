@@ -7,8 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 file(GLOB SOURCES "sources/*.cpp" "sources/**/*.cpp")
 
 add_executable(raytracer ${SOURCES})
-target_include_directories(raytracer PRIVATE "include")
-target_compile_definitions(raytracer PUBLIC HIDE_SHARED=1)
+target_include_directories(raytracer PUBLIC "include")
 
 option(BUILD_DOC "Build documentation" OFF)
 
@@ -31,3 +30,9 @@ if (DOXYGEN_FOUND AND BUILD_DOC)
 else (DOXYGEN_FOUND AND BUILD_DOC)
     message("Please install Doxygen to generate the documentation")
 endif (DOXYGEN_FOUND AND BUILD_DOC)
+
+add_subdirectory("library/SFML")
+target_link_libraries(raytracer sfml-graphics sfml-window sfml-system)
+
+add_subdirectory("library/config")
+target_link_libraries(raytracer config)
