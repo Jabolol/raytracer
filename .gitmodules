@@ -1,0 +1,6 @@
+[submodule "library/SFML"]
+	path = library/SFML
+	url = git@github.com:SFML/SFML.git
+[submodule "library/config"]
+	path = library/config
+	url = https://github.com/hyperrealm/libconfig.git
