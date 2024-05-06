@@ -80,7 +80,7 @@ namespace Raytracer::Utils
             return v;
         }
 
-        T operator[](int i) const
+        T operator[](std::size_t i) const
         {
             if (i >= N) {
                 throw std::out_of_range("Index out of bounds");
@@ -88,7 +88,7 @@ namespace Raytracer::Utils
             return e[i];
         }
 
-        T &operator[](int i)
+        T &operator[](std::size_t i)
         {
             if (i >= N) {
                 throw std::out_of_range("Index out of bounds");
