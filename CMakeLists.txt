@@ -31,8 +31,5 @@ else (DOXYGEN_FOUND AND BUILD_DOC)
     message("Please install Doxygen to generate the documentation")
 endif (DOXYGEN_FOUND AND BUILD_DOC)
 
-add_subdirectory("library/SFML")
-target_link_libraries(raytracer sfml-graphics sfml-window sfml-system)
-
 add_subdirectory("library/config")
 target_link_libraries(raytracer config)
