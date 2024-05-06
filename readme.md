@@ -49,3 +49,4 @@
 - [x] depth of field
 - [x] quadrilaterals
 - [x] constant medium (fog)
+- [x] tinted dielectric
