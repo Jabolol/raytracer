@@ -1,7 +1,7 @@
 #include "interfaces/IHittable.hpp"
 
-#ifndef __ROTATE_HPP__
-    #define __ROTATE_HPP__
+#ifndef __ROTATE_X_HPP__
+    #define __ROTATE_X_HPP__
 
 namespace Raytracer::Effects
 {
@@ -21,4 +21,4 @@ namespace Raytracer::Effects
 
 } // namespace Raytracer::Effects
 
-#endif /* __ROTATE_HPP__ */
+#endif /* __ROTATE_X_HPP__ */
