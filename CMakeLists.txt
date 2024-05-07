@@ -32,4 +32,4 @@ else (DOXYGEN_FOUND AND BUILD_DOC)
 endif (DOXYGEN_FOUND AND BUILD_DOC)
 
 add_subdirectory("library/config")
-target_link_libraries(raytracer config)
+target_link_libraries(raytracer config++)
