@@ -14,81 +14,12 @@
 #include "interfaces/IArguments.hpp"
 #include "utils/VecN.hpp"
 #include "libconfig.h++"
+#include <type_traits>
 #include <unordered_map>
 
-bool Raytracer::Config::Manager::parse(std::string path)
+Raytracer::Config::Manager::Manager()
 {
-    try {
-        _config.readFile(path.c_str());
-    } catch (const libconfig::FileIOException &e) {
-        std::cerr << "I/O error while reading file." << std::endl;
-        return false;
-    } catch (const libconfig::ParseException &e) {
-        std::cerr << "Parse exception at " << e.getFile() << ":" << e.getLine()
-                  << " - " << e.getError() << std::endl;
-        return false;
-    }
-
-    const libconfig::Setting &root = _config.getRoot();
-    try {
-        const libconfig::Setting &scene = root["scene"];
-        parseTextures(scene["textures"]);
-        // ...
-    } catch (const libconfig::SettingNotFoundException &e) {
-        std::cerr << "error: path `" << e.getPath()
-                  << "` not found, aborting..." << std::endl;
-        return false;
-    } catch (const std::runtime_error &e) {
-        std::cerr << "error: " << e.what() << std::endl;
-        return false;
-    }
-    return true;
-}
-
-void Raytracer::Config::Manager::parseTextures(
-    const libconfig::Setting &textures)
-{
-    for (int i = 0; i < textures.getLength(); i++) {
-        const libconfig::Setting &texture = textures[i];
-        std::string type = texture["type"];
-        libconfig::Setting &args = texture["args"];
-        std::shared_ptr<Interfaces::IArguments> argument = create(type, args);
-
-        if (argument == nullptr) {
-            throw std::runtime_error("failed to create texture argument");
-        }
-
-        std::shared_ptr<Interfaces::ITexture> resource =
-            Factory::get<Raytracer::Interfaces::ITexture, ConfigTextures>(
-                type, argument);
-
-        _textures.push_back(resource);
-        _texturesMap[texture["id"].c_str()] = resource;
-    }
-}
-
-std::shared_ptr<Raytracer::Interfaces::IArguments>
-Raytracer::Config::Manager::create(
-    const std::string &type, libconfig::Setting &args)
-{
-    if (argumentMap.find(type) == argumentMap.end()) {
-        std::cerr << "error: type `" << type << "` not found, aborting..."
-                  << std::endl;
-        return nullptr;
-    }
-    return argumentMap[type](args);
-}
-
-Raytracer::Utils::Color Raytracer::Config::Manager::parseColor(
-    const libconfig::Setting &color)
-{
-    return Utils::Color(color[0], color[1], color[2]);
-}
-
-std::unordered_map<std::string,
-    std::function<std::shared_ptr<Raytracer::Interfaces::IArguments>(
-        libconfig::Setting &)>>
-    Raytracer::Config::Manager::argumentMap = {
+    _argumentMap = {
         {
             "solid",
             [](libconfig::Setting &args) {
@@ -101,7 +32,7 @@ std::unordered_map<std::string,
             },
         },
         {
-            "perlin",
+            "noise",
             [](libconfig::Setting &args) {
                 double scale = args["scale"];
                 std::shared_ptr<Interfaces::IArguments> argument =
@@ -142,7 +73,9 @@ std::unordered_map<std::string,
         },
         {
             "checker",
-            [](libconfig::Setting &args) {
+            [this](libconfig::Setting &args) {
+                double scale = args["scale"];
+
                 if (args.exists("color_even") && args.exists("color_odd")) {
                     libconfig::Setting &rgb_even = args["color_even"];
                     Utils::Color color_even = Manager::parseColor(rgb_even);
@@ -150,22 +83,26 @@ std::unordered_map<std::string,
                     Utils::Color color_odd = Manager::parseColor(rgb_odd);
                     std::shared_ptr<Interfaces::IArguments> argument =
                         std::make_shared<Arguments::Checker>(
-                            color_even, color_odd);
+                            scale, color_even, color_odd);
 
                     return argument;
                 }
 
-                // // TODO: Handle creation of texture pointers
-                // if (args.exists("texture_even")
-                //     && args.exists("texture_odd")) {
-                //     std::string texture_even = args["texture_even"];
-                //     std::string texture_odd = args["texture_odd"];
-                //     std::shared_ptr<Interfaces::IArguments> argument =
-                //         std::make_shared<Arguments::Checker>(
-                //             texture_even, texture_odd);
+                if (args.exists("texture_even")
+                    && args.exists("texture_odd")) {
+                    std::shared_ptr<Interfaces::ITexture> first =
+                        retrieve<Interfaces::ITexture>(
+                            args, _textures, "texture_even");
+                    std::shared_ptr<Interfaces::ITexture> second =
+                        retrieve<Interfaces::ITexture>(
+                            args, _textures, "texture_odd");
 
-                //     return argument;
-                // }
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::Checker>(
+                            scale, first, second);
+
+                    return argument;
+                }
 
                 throw std::runtime_error(
                     "checker texture must have color_even and color_odd or "
@@ -174,85 +111,98 @@ std::unordered_map<std::string,
         },
         {
             "rotate_x",
-            [](libconfig::Setting &args) {
+            [this](libconfig::Setting &args) {
                 double angle = args["angle"];
-                // TODO: Pass target object as first argument
+                std::shared_ptr<Interfaces::IHittable> hittable =
+                    retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
-                    std::make_shared<Arguments::RotateX>(nullptr, angle);
+                    std::make_shared<Arguments::RotateX>(hittable, angle);
 
                 return argument;
             },
         },
         {
             "rotate_y",
-            [](libconfig::Setting &args) {
+            [this](libconfig::Setting &args) {
                 double angle = args["angle"];
-                // TODO: Pass target object as first argument
+                std::shared_ptr<Interfaces::IHittable> hittable =
+                    retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
-                    std::make_shared<Arguments::RotateY>(nullptr, angle);
+                    std::make_shared<Arguments::RotateY>(hittable, angle);
 
                 return argument;
             },
         },
         {
             "rotate_z",
-            [](libconfig::Setting &args) {
+            [this](libconfig::Setting &args) {
                 double angle = args["angle"];
-                // TODO: Pass target object as first argument
+                std::shared_ptr<Interfaces::IHittable> hittable =
+                    retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
-                    std::make_shared<Arguments::RotateZ>(nullptr, angle);
+                    std::make_shared<Arguments::RotateZ>(hittable, angle);
 
                 return argument;
             },
         },
         {
             "smoke",
-            [](libconfig::Setting &args) {
+            [this](libconfig::Setting &args) {
                 double density = args["density"];
-                std::shared_ptr<Interfaces::IArguments> argument;
+                std::shared_ptr<Interfaces::IHittable> hittable =
+                    retrieve<Interfaces::IHittable>(args, _shapes, "target");
 
                 if (args.exists("color")) {
                     libconfig::Setting &rgb = args["color"];
                     Utils::Color color = Manager::parseColor(rgb);
-                    // TODO: Pass target object as first argument
-                    return std::make_shared<Arguments::Smoke>(
-                        nullptr, density, color);
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::Smoke>(
+                            hittable, density, color);
+
+                    return argument;
                 }
 
-                // // TODO: Handle creation of texture pointers
-                // if (args.exists("texture")) {
-                //     std::string texture = args["texture"];
-                //     return std::make_shared<Arguments::Smoke>(
-                //         density, texture);
-                // }
+                if (args.exists("texture")) {
+                    std::shared_ptr<Interfaces::ITexture> texture =
+                        retrieve<Interfaces::ITexture>(
+                            args, _textures, "texture");
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::Smoke>(
+                            hittable, density, texture);
+
+                    return argument;
+                }
 
                 throw std::runtime_error(
-                    "smoke texture must have color or texture");
+                    "smoke effect must have color or texture");
             },
         },
         {
             "translate",
-            [](libconfig::Setting &args) {
-                libconfig::Setting &vec = args["offset"];
-                Utils::Vec3 vector(vec[0], vec[1], vec[2]);
-                // TODO: Pass target object as first argument
+            [this](libconfig::Setting &args) {
+                Utils::Vec3 offset = parseColor(args["offset"]);
+                std::shared_ptr<Interfaces::IHittable> hittable =
+                    retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
-                    std::make_shared<Arguments::Translate>(nullptr, vector);
+                    std::make_shared<Arguments::Translate>(hittable, offset);
+                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
         },
         {
             "lambertian",
-            [](libconfig::Setting &args) {
-                // // TODO: Handle creation of texture pointers
-                // if (args.exists("texture")) {
-                // std::string texture = args["texture"];
-                // std::shared_ptr<Interfaces::IArguments> argument =
-                // std::make_shared<Arguments::Lambertian>(texture);
-                //
-                // return argument;
-                // }
+            [this](libconfig::Setting &args) {
+                if (args.exists("texture")) {
+                    std::shared_ptr<Interfaces::ITexture> texture =
+                        retrieve<Interfaces::ITexture>(
+                            args, _textures, "texture");
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::Lambertian>(texture);
+
+                    return argument;
+                }
+
                 if (args.exists("color")) {
                     libconfig::Setting &rgb = args["color"];
                     Utils::Color color = Manager::parseColor(rgb);
@@ -270,6 +220,7 @@ std::unordered_map<std::string,
             "dielectric",
             [](libconfig::Setting &args) {
                 double refraction = args["refractionIndex"];
+
                 if (args.exists(("color"))) {
                     libconfig::Setting &rgb = args["color"];
                     Utils::Color color = Manager::parseColor(rgb);
@@ -283,7 +234,7 @@ std::unordered_map<std::string,
         },
         {
             "diffuse_light",
-            [](libconfig::Setting &args) {
+            [this](libconfig::Setting &args) {
                 if (args.exists("color")) {
                     libconfig::Setting &rgb = args["color"];
                     Utils::Color color = Manager::parseColor(rgb);
@@ -292,14 +243,16 @@ std::unordered_map<std::string,
 
                     return argument;
                 }
-                // // TODO: Handle creation of texture pointers
-                // if (args.exists("texture")) {
-                //     std::string texture = args["texture"];
-                //     std::shared_ptr<Interfaces::IArguments> argument =
-                //         std::make_shared<Arguments::DiffuseLight>(texture);
 
-                //     return argument;
-                // }
+                if (args.exists("texture")) {
+                    std::shared_ptr<Interfaces::ITexture> texture =
+                        retrieve<Interfaces::ITexture>(
+                            args, _textures, "texture");
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::DiffuseLight>(texture);
+
+                    return argument;
+                }
 
                 throw std::runtime_error(
                     "diffuse_light material must have color or texture");
@@ -307,7 +260,7 @@ std::unordered_map<std::string,
         },
         {
             "isotropic",
-            [](libconfig::Setting &args) {
+            [this](libconfig::Setting &args) {
                 if (args.exists("color")) {
                     libconfig::Setting &rgb = args["color"];
                     Utils::Color color = Manager::parseColor(rgb);
@@ -317,14 +270,15 @@ std::unordered_map<std::string,
                     return argument;
                 }
 
-                // // TODO: Handle creation of texture pointers
-                // if (args.exists("texture")) {
-                //     std::string texture = args["texture"];
-                //     std::shared_ptr<Interfaces::IArguments> argument =
-                //         std::make_shared<Arguments::Isotropic>(texture);
+                if (args.exists("texture")) {
+                    std::shared_ptr<Interfaces::ITexture> texture =
+                        retrieve<Interfaces::ITexture>(
+                            args, _textures, "texture");
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::Isotropic>(texture);
 
-                //     return argument;
-                // }
+                    return argument;
+                }
 
                 throw std::runtime_error(
                     "isotropic material must have color or texture");
@@ -342,5 +296,197 @@ std::unordered_map<std::string,
                 return argument;
             },
         },
-        // TODO: Add shapes arguments
-};
+        {
+            "cone",
+            [this](libconfig::Setting &args) {
+                Utils::Point3 center = parseColor(args["center"]);
+                double radius = args["radius"];
+                double height = args["height"];
+                std::shared_ptr<Interfaces::IMaterial> material =
+                    retrieve<Interfaces::IMaterial>(
+                        args, _materials, "material");
+                std::shared_ptr<Interfaces::IArguments> argument =
+                    std::make_shared<Arguments::Cone>(
+                        center, radius, height, material);
+
+                return argument;
+            },
+        },
+        {
+            "cylinder",
+            [this](libconfig::Setting &args) {
+                Utils::Point3 center = parseColor(args["center"]);
+                double radius = args["radius"];
+                double height = args["height"];
+                std::shared_ptr<Interfaces::IMaterial> material =
+                    retrieve<Interfaces::IMaterial>(
+                        args, _materials, "material");
+                std::shared_ptr<Interfaces::IArguments> argument =
+                    std::make_shared<Arguments::Cylinder>(
+                        center, radius, height, material);
+
+                return argument;
+            },
+        },
+        {
+            "plane",
+            [this](libconfig::Setting &args) {
+                Utils::Point3 point = parseColor(args["point"]);
+                Utils::Vec3 normal = parseColor(args["normal"]);
+                std::shared_ptr<Interfaces::IMaterial> material =
+                    retrieve<Interfaces::IMaterial>(
+                        args, _materials, "material");
+                std::shared_ptr<Interfaces::IArguments> argument =
+                    std::make_shared<Arguments::Plane>(
+                        point, normal, material);
+
+                return argument;
+            },
+        },
+        {
+            "quad",
+            [this](libconfig::Setting &args) {
+                Utils::Point3 q = parseColor(args["q"]);
+                Utils::Point3 u = parseColor(args["u"]);
+                Utils::Point3 v = parseColor(args["v"]);
+                std::shared_ptr<Interfaces::IMaterial> material =
+                    retrieve<Interfaces::IMaterial>(
+                        args, _materials, "material");
+                std::shared_ptr<Interfaces::IArguments> argument =
+                    std::make_shared<Arguments::Quad>(q, u, v, material);
+
+                return argument;
+            },
+        },
+        {
+            "sphere",
+            [this](libconfig::Setting &args) {
+                double radius = args["radius"];
+                std::shared_ptr<Interfaces::IMaterial> material =
+                    retrieve<Interfaces::IMaterial>(
+                        args, _materials, "material");
+
+                if (args.exists("center_one") && args.exists("center_two")) {
+                    Utils::Point3 one = parseColor(args["center_one"]);
+                    Utils::Point3 two = parseColor(args["center_two"]);
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::Sphere>(
+                            one, two, radius, material);
+
+                    return argument;
+                }
+
+                if (args.exists("center")) {
+                    Utils::Point3 center = parseColor(args["center"]);
+                    std::shared_ptr<Interfaces::IArguments> argument =
+                        std::make_shared<Arguments::Sphere>(
+                            center, radius, material);
+
+                    return argument;
+                }
+
+                throw std::runtime_error("sphere shape must have center or "
+                                         "center_one and center_two");
+            },
+        },
+    };
+}
+
+bool Raytracer::Config::Manager::parse(std::string path)
+{
+    try {
+        _config.readFile(path.c_str());
+    } catch (const libconfig::FileIOException &e) {
+        std::cerr << "I/O error while reading file." << std::endl;
+        return false;
+    } catch (const libconfig::ParseException &e) {
+        std::cerr << "Parse exception at " << e.getFile() << ":" << e.getLine()
+                  << " - " << e.getError() << std::endl;
+        return false;
+    }
+
+    const libconfig::Setting &root = _config.getRoot();
+    try {
+        const libconfig::Setting &scene = root["scene"];
+        genericParse<Interfaces::ITexture, ConfigTextures>(
+            scene["textures"], _textures);
+        genericParse<Interfaces::IMaterial, ConfigMaterials>(
+            scene["materials"], _materials);
+        genericParse<Interfaces::IHittable, ConfigShapes>(
+            scene["shapes"], _shapes);
+        genericParse<Interfaces::IHittable, ConfigEffects>(
+            scene["effects"], _effects);
+    } catch (const libconfig::SettingNotFoundException &e) {
+        std::cerr << "error: path `" << e.getPath()
+                  << "` not found, aborting..." << std::endl;
+        return false;
+    } catch (const std::runtime_error &e) {
+        std::cerr << "error: " << e.what() << std::endl;
+        return false;
+    }
+    return true;
+}
+
+template <typename I, typename E>
+    requires std::is_enum_v<E>
+void Raytracer::Config::Manager::genericParse(
+    const libconfig::Setting &setting,
+    std::unordered_map<std::string, std::shared_ptr<I>> &containerMap)
+{
+    for (int i = 0; i < setting.getLength(); i++) {
+        const libconfig::Setting &root = setting[i];
+        std::string type = root["type"];
+        libconfig::Setting &args = root["args"];
+        std::shared_ptr<Interfaces::IArguments> argument = create(type, args);
+
+        if (argument == nullptr) {
+            throw std::runtime_error("failed to create argument");
+        }
+
+        std::shared_ptr<I> resource = Factory::get<I, E>(type, argument);
+
+        containerMap[root["id"].c_str()] = resource;
+    }
+}
+
+std::shared_ptr<Raytracer::Interfaces::IArguments>
+Raytracer::Config::Manager::create(
+    const std::string &type, libconfig::Setting &args)
+{
+    if (!_argumentMap.contains(type)) {
+        std::cerr << "error: type `" << type << "` not found, aborting..."
+                  << std::endl;
+        return nullptr;
+    }
+
+    try {
+        return _argumentMap[type](args);
+    } catch (libconfig::SettingTypeException &e) {
+        std::cerr << "error: " << e.getPath() << " is not of the correct type"
+                  << std::endl;
+        return nullptr;
+    }
+}
+
+Raytracer::Utils::Color Raytracer::Config::Manager::parseColor(
+    const libconfig::Setting &color)
+{
+    return Utils::Color(color[0], color[1], color[2]);
+}
+
+template <typename I>
+std::shared_ptr<I> Raytracer::Config::Manager::retrieve(
+    const libconfig::Setting &arguments,
+    std::unordered_map<std::string, std::shared_ptr<I>> &containerMap,
+    const std::string &name)
+{
+    if (!arguments.exists(name)) {
+        throw std::runtime_error("error: " + name + " not found");
+    }
+
+    if (!containerMap.contains(arguments[name])) {
+        throw std::runtime_error("error: " + name + " not found");
+    }
+
+    return containerMap.at(arguments[name]);
+}

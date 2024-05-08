@@ -1,8 +1,7 @@
 #include <functional>
 #include <libconfig.hh>
 #include <memory>
-#include <vector>
-#include "Common.hpp"
+#include <string>
 #include "core/Camera.hpp"
 #include "core/Scene.hpp"
 #include "interfaces/IArguments.hpp"
@@ -22,38 +21,33 @@ namespace Raytracer::Config
         libconfig::Config _config;
         Raytracer::Core::Scene _world;
         Raytracer::Core::Camera _camera;
-        std::vector<std::shared_ptr<Interfaces::ITexture>> _textures;
-        std::vector<std::shared_ptr<Interfaces::IHittable>> _effects;
-        std::vector<std::shared_ptr<Interfaces::IMaterial>> _materials;
-        std::vector<std::shared_ptr<Interfaces::IHittable>> _shapes;
-
         std::unordered_map<std::string, std::shared_ptr<Interfaces::ITexture>>
-            _texturesMap;
+            _textures;
         std::unordered_map<std::string, std::shared_ptr<Interfaces::IHittable>>
-            _effectsMap;
+            _effects;
         std::unordered_map<std::string, std::shared_ptr<Interfaces::IMaterial>>
-            _materialsMap;
+            _materials;
         std::unordered_map<std::string, std::shared_ptr<Interfaces::IHittable>>
-            _shapesMap;
+            _shapes;
 
       public:
+        Manager();
         bool parse(std::string path);
-        GET_SET(std::vector<std::shared_ptr<Interfaces::ITexture>>, textures);
-        GET_SET(std::vector<std::shared_ptr<Interfaces::IHittable>>, effects);
-        GET_SET(
-            std::vector<std::shared_ptr<Interfaces::IMaterial>>, materials);
-        GET_SET(std::vector<std::shared_ptr<Interfaces::IHittable>>, shapes);
-        static std::unordered_map<std::string,
+        std::unordered_map<std::string,
             std::function<std::shared_ptr<Interfaces::IArguments>(
                 libconfig::Setting &)>>
-            argumentMap;
+            _argumentMap;
         static Utils::Color parseColor(const libconfig::Setting &color);
 
       private:
-        void parseTextures(const libconfig::Setting &textures);
-        void parseEffects(const libconfig::Setting &effects);
-        void parseMaterials(const libconfig::Setting &materials);
-        void parseShapes(const libconfig::Setting &shapes);
+        template <typename I, typename E>
+            requires std::is_enum_v<E>
+        void genericParse(const libconfig::Setting &arguments,
+            std::unordered_map<std::string, std::shared_ptr<I>> &containerMap);
+        template <typename I>
+        std::shared_ptr<I> retrieve(const libconfig::Setting &arguments,
+            std::unordered_map<std::string, std::shared_ptr<I>> &containerMap,
+            const std::string &name);
         std::shared_ptr<Raytracer::Interfaces::IArguments> create(
             const std::string &type, libconfig::Setting &args);
     };
