@@ -15,7 +15,7 @@ namespace Raytracer::Core
         int _imageWidth = 100;
         int _samplesPerPixel = 10;
         int _maxDepth = 10;
-        Utils::Color _backgroundColor;
+        Utils::Color _backgroundColor = Utils::Color(0, 0, 0);
 
         double _vFov = 90;
         Utils::Point3 _lookFrom = Utils::Point3(0, 0, 0);
