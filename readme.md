@@ -13,9 +13,9 @@
 - [x] directional light
 - [x] ambient light
 - [x] flat color
-- [ ] add primitive to scene
-- [ ] set up lighting
-- [ ] set up camera
+- [x] add primitive to scene
+- [x] set up lighting
+- [x] set up camera
 - [x] output to ppm
 
 ## should
@@ -38,7 +38,7 @@
 - [x] texturing from file (1)
 - [x] texturing from procedural chessboard (1)
 - [x] texturing from procedural perlin noise (1)
-- [ ] import a scene in a scene (2)
+- [x] import a scene in a scene (2)
 - [x] set up antialiasing through supersampling (0.5)
 - [x] space partitioning (2)
 - [x] scene preview using a fast renderer (2)
