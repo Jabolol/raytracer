@@ -9,7 +9,7 @@ file(GLOB SOURCES "sources/*.cpp" "sources/**/*.cpp")
 add_executable(raytracer ${SOURCES})
 target_include_directories(raytracer PUBLIC "include")
 
-option(BUILD_DOC "Build documentation" OFF)
+option(BUILD_DOC "Build documentation" ON)
 
 find_package(Doxygen)
 if (DOXYGEN_FOUND AND BUILD_DOC)
