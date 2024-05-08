@@ -1,3 +1,4 @@
+#include <memory>
 #include "Common.hpp"
 #include "arguments/Kinds.hpp"
 #include "interfaces/IArguments.hpp"
