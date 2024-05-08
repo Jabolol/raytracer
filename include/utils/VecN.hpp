@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include "exceptions/Range.hpp"
 #include <type_traits>
 
 #ifndef __VEC_N_HPP__
@@ -83,7 +84,7 @@ namespace Raytracer::Utils
         T operator[](std::size_t i) const
         {
             if (i >= N) {
-                throw std::out_of_range("Index out of bounds");
+                throw Exceptions::RangeException("Index out of bounds");
             }
             return e[i];
         }
@@ -91,7 +92,7 @@ namespace Raytracer::Utils
         T &operator[](std::size_t i)
         {
             if (i >= N) {
-                throw std::out_of_range("Index out of bounds");
+                throw Exceptions::RangeException("Index out of bounds");
             }
             return e[i];
         }
