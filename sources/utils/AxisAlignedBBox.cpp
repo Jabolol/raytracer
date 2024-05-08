@@ -1,6 +1,20 @@
 #include "utils/AxisAlignedBBox.hpp"
 #include "utils/Interval.hpp"
 
+/**
+ * @brief Construct a new AxisAlignedBBox object.
+ *
+ * This function constructs a new AxisAlignedBBox object with the given x, y,
+ * and z intervals. The AxisAlignedBBox is an axis-aligned bounding box that
+ * represents a box in 3D space. The x, y, and z intervals represent the
+ * intervals of the box along the x, y, and z axes.
+ *
+ * @param x The interval along the x-axis.
+ * @param y The interval along the y-axis.
+ * @param z The interval along the z-axis.
+ *
+ * @return A new AxisAlignedBBox object.
+ */
 Raytracer::Utils::AxisAlignedBBox::AxisAlignedBBox(
     const Interval &x, const Interval &y, const Interval &z)
     : _x(x), _y(y), _z(z)
@@ -8,6 +22,18 @@ Raytracer::Utils::AxisAlignedBBox::AxisAlignedBBox(
     padToMinimum();
 }
 
+/**
+ * @brief Construct a new AxisAlignedBBox object.
+ *
+ * This function constructs a new AxisAlignedBBox object with the given points.
+ * The AxisAlignedBBox is an axis-aligned bounding box that represents a box in
+ * 3D space. The box is defined by the two points.
+ *
+ * @param a The first point of the box.
+ * @param b The second point of the box.
+ *
+ * @return A new AxisAlignedBBox object.
+ */
 Raytracer::Utils::AxisAlignedBBox::AxisAlignedBBox(
     const Point3 &a, const Point3 &b)
 {
@@ -18,6 +44,18 @@ Raytracer::Utils::AxisAlignedBBox::AxisAlignedBBox(
     padToMinimum();
 }
 
+/**
+ * @brief Construct a new AxisAlignedBBox object.
+ *
+ * This function constructs a new AxisAlignedBBox object by combining the given
+ * AxisAlignedBBoxes. The new AxisAlignedBBox is the smallest AxisAlignedBBox
+ * that contains both of the given AxisAlignedBBoxes.
+ *
+ * @param a The first AxisAlignedBBox.
+ * @param b The second AxisAlignedBBox.
+ *
+ * @return A new AxisAlignedBBox object.
+ */
 Raytracer::Utils::AxisAlignedBBox::AxisAlignedBBox(
     const AxisAlignedBBox &a, const AxisAlignedBBox &b)
 {
@@ -26,6 +64,15 @@ Raytracer::Utils::AxisAlignedBBox::AxisAlignedBBox(
     _z = Interval(a.z(), b.z());
 }
 
+/**
+ * @brief Get the interval along the x-axis.
+ *
+ * This function returns the interval along the x-axis.
+ *
+ * @param n The axis to get the interval for.
+ *
+ * @return The interval along the x-axis.
+ */
 const Raytracer::Utils::Interval &
 Raytracer::Utils::AxisAlignedBBox::axisInterval(int n) const
 {
@@ -38,6 +85,18 @@ Raytracer::Utils::AxisAlignedBBox::axisInterval(int n) const
     return _x;
 }
 
+/**
+ * @brief Check if the ray hits the AxisAlignedBBox.
+ *
+ * This function checks if the ray hits the AxisAlignedBBox. The function
+ * returns true if the ray hits the AxisAlignedBBox. The function returns false
+ * if the ray does not hit the AxisAlignedBBox.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ *
+ * @return True if the ray hits the AxisAlignedBBox, false otherwise.
+ */
 bool Raytracer::Utils::AxisAlignedBBox::hit(
     const Core::Ray &ray, Interval interval) const
 {
@@ -66,6 +125,16 @@ bool Raytracer::Utils::AxisAlignedBBox::hit(
     return true;
 }
 
+/**
+ * @brief Get the longest axis of the AxisAlignedBBox.
+ *
+ * This function returns the index of the longest axis of the AxisAlignedBBox.
+ * The function returns 0 if the x-axis is the longest axis. The function
+ * returns 1 if the y-axis is the longest axis. The function returns 2 if the
+ * z-axis is the longest axis.
+ *
+ * @return The index of the longest axis of the AxisAlignedBBox.
+ */
 int Raytracer::Utils::AxisAlignedBBox::longestAxis() const
 {
     double x = _x.size();
@@ -79,6 +148,15 @@ int Raytracer::Utils::AxisAlignedBBox::longestAxis() const
     }
 }
 
+/**
+ * @brief Pad the AxisAlignedBBox to the minimum size.
+ *
+ * This function pads the AxisAlignedBBox to the minimum size. The function
+ * expands the intervals of the AxisAlignedBBox to the minimum size if the
+ * intervals are smaller than the minimum size.
+ *
+ * @return void
+ */
 void Raytracer::Utils::AxisAlignedBBox::padToMinimum()
 {
     double delta = 0.0001;
@@ -94,14 +172,35 @@ void Raytracer::Utils::AxisAlignedBBox::padToMinimum()
     }
 }
 
+/**
+ * @brief Empty AxisAlignedBBox.
+ *
+ * This constant represents an empty AxisAlignedBBox.
+ */
 const Raytracer::Utils::AxisAlignedBBox
     Raytracer::Utils::AxisAlignedBBox::Empty =
         AxisAlignedBBox(Interval::Empty, Interval::Empty, Interval::Empty);
 
+/**
+ * @brief Universe AxisAlignedBBox.
+ *
+ * This constant represents the universe AxisAlignedBBox.
+ */
 const Raytracer::Utils::AxisAlignedBBox
     Raytracer::Utils::AxisAlignedBBox::Universe = AxisAlignedBBox(
         Interval::Universe, Interval::Universe, Interval::Universe);
 
+/**
+ * @brief Operator to add a Vec3 to an AxisAlignedBBox.
+ *
+ * This operator adds a Vec3 to an AxisAlignedBBox. The operator returns a new
+ * AxisAlignedBBox with the Vec3 added to the AxisAlignedBBox.
+ *
+ * @param value The AxisAlignedBBox to add the Vec3 to.
+ * @param offset The Vec3 to add to the AxisAlignedBBox.
+ *
+ * @return The AxisAlignedBBox with the Vec3 added to it.
+ */
 Raytracer::Utils::AxisAlignedBBox Raytracer::Utils::operator+(
     const Raytracer::Utils::AxisAlignedBBox &value,
     Raytracer::Utils::Vec3 offset)
@@ -110,6 +209,17 @@ Raytracer::Utils::AxisAlignedBBox Raytracer::Utils::operator+(
         value.y() + offset.y(), value.z() + offset.z());
 }
 
+/**
+ * @brief Operator to add an AxisAlignedBBox to a Vec3.
+ *
+ * This operator adds an AxisAlignedBBox to a Vec3. The operator returns a new
+ * AxisAlignedBBox with the Vec3 added to the AxisAlignedBBox.
+ *
+ * @param offset The Vec3 to add to the AxisAlignedBBox.
+ * @param value The AxisAlignedBBox to add the Vec3 to.
+ *
+ * @return The AxisAlignedBBox with the Vec3 added to it.
+ */
 Raytracer::Utils::AxisAlignedBBox Raytracer::Utils::operator+(
     Raytracer::Utils::Vec3 offset,
     const Raytracer::Utils::AxisAlignedBBox &value)

@@ -1,6 +1,19 @@
 #include "shapes/Sphere.hpp"
 #include <cmath>
 
+/**
+ * @brief Construct a new Sphere object.
+ *
+ * This function constructs a new Sphere object with the given center, radius,
+ * and material. The sphere is centered at the given center with the given
+ * radius and material.
+ *
+ * @param center The center of the sphere.
+ * @param radius The radius of the sphere.
+ * @param material The material of the sphere.
+ *
+ * @return A new Sphere object.
+ */
 Raytracer::Shapes::Sphere::Sphere(const Utils::Point3 &center, double radius,
     std::shared_ptr<Interfaces::IMaterial> material)
     : _center(center), _radius(std::fmax(0, radius)), _material(material),
@@ -10,6 +23,20 @@ Raytracer::Shapes::Sphere::Sphere(const Utils::Point3 &center, double radius,
     _bbox = Utils::AxisAlignedBBox(_center - rvec, _center + rvec);
 }
 
+/**
+ * @brief Construct a new Sphere object.
+ *
+ * This function constructs a new Sphere object with the given centers, radius,
+ * and material. The sphere is centered at the given centers with the given
+ * radius and material.
+ *
+ * @param one The first center of the sphere.
+ * @param two The second center of the sphere.
+ * @param radius The radius of the sphere.
+ * @param material The material of the sphere.
+ *
+ * @return A new Sphere object.
+ */
 Raytracer::Shapes::Sphere::Sphere(const Utils::Point3 &one,
     const Utils::Point3 &two, double radius,
     std::shared_ptr<Interfaces::IMaterial> material)
@@ -24,6 +51,19 @@ Raytracer::Shapes::Sphere::Sphere(const Utils::Point3 &one,
     _centerVec = two - one;
 }
 
+/**
+ * @brief Check if the ray hits the sphere.
+ *
+ * This function checks if the ray hits the sphere. The function returns true
+ * if the ray hits the sphere. The function returns false if the ray does not
+ * hit the sphere. The function updates the payload with the hit information.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ * @param payload The payload to update with the hit information.
+ *
+ * @return true if the ray hits the sphere, false otherwise.
+ */
 bool Raytracer::Shapes::Sphere::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
@@ -60,18 +100,43 @@ bool Raytracer::Shapes::Sphere::hit(const Core::Ray &ray,
     return true;
 }
 
+/**
+ * @brief Get the bounding box of the sphere.
+ *
+ * This function returns the bounding box of the sphere.
+ *
+ * @return The bounding box of the sphere.
+ */
 Raytracer::Utils::AxisAlignedBBox
 Raytracer::Shapes::Sphere::boundingBox() const
 {
     return _bbox;
 }
 
+/**
+ * @brief Get the center of the sphere at the given time.
+ *
+ * This function returns the center of the sphere at the given time.
+ *
+ * @param time The time to get the center of the sphere.
+ *
+ * @return The center of the sphere at the given time.
+ */
 Raytracer::Utils::Point3 Raytracer::Shapes::Sphere::sphereCenter(
     double time) const
 {
     return _center + time * _centerVec;
 }
 
+/**
+ * @brief Get the UV coordinates of the sphere.
+ *
+ * This function returns the UV coordinates of the sphere.
+ *
+ * @param point The point to get the UV coordinates.
+ * @param u The U coordinate of the UV coordinates.
+ * @param v The V coordinate of the UV coordinates.
+ */
 void Raytracer::Shapes::Sphere::getSphereUV(
     const Utils::Point3 &point, double &u, double &v)
 {

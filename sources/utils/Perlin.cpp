@@ -1,5 +1,14 @@
 #include "utils/Perlin.hpp"
 
+/**
+ * @brief Construct a new Perlin object.
+ *
+ * This function constructs a new Perlin object.
+ * The Perlin object is a Perlin noise generator.
+ * The Perlin noise is a type of gradient noise.
+ *
+ * @return A new Perlin object.
+ */
 Raytracer::Utils::Perlin::Perlin()
 {
     _randVec = new Utils::Vec3[pointCount];
@@ -12,6 +21,11 @@ Raytracer::Utils::Perlin::Perlin()
     _permZ = perlinGeneratePerm();
 }
 
+/**
+ * @brief Destroy the Perlin object.
+ *
+ * This function destroys the Perlin object.
+ */
 Raytracer::Utils::Perlin::~Perlin()
 {
     delete[] _randVec;
@@ -20,6 +34,15 @@ Raytracer::Utils::Perlin::~Perlin()
     delete[] _permZ;
 }
 
+/**
+ * @brief Get the noise value at the given point.
+ *
+ * This function returns the noise value at the given point.
+ *
+ * @param point The point.
+ *
+ * @return The noise value.
+ */
 double Raytracer::Utils::Perlin::noise(const Utils::Point3 &point) const
 {
     double u = point.x() - std::floor(point.x());
@@ -44,6 +67,16 @@ double Raytracer::Utils::Perlin::noise(const Utils::Point3 &point) const
     return perlinInterp(c, u, v, w);
 }
 
+/**
+ * @brief Get the turbulence value at the given point.
+ *
+ * This function returns the turbulence value at the given point.
+ *
+ * @param point The point.
+ * @param depth The depth.
+ *
+ * @return The turbulence value.
+ */
 double Raytracer::Utils::Perlin::turbulence(
     const Utils::Point3 &point, int depth) const
 {
@@ -60,6 +93,13 @@ double Raytracer::Utils::Perlin::turbulence(
     return std::fabs(accum);
 }
 
+/**
+ * @brief Generate the permutation table.
+ *
+ * This function generates the permutation table.
+ *
+ * @return The permutation table.
+ */
 int *Raytracer::Utils::Perlin::perlinGeneratePerm()
 {
     int *perm = new int[pointCount];
@@ -71,6 +111,14 @@ int *Raytracer::Utils::Perlin::perlinGeneratePerm()
     return perm;
 }
 
+/**
+ * @brief Permute the permutation table.
+ *
+ * This function permutes the permutation table.
+ *
+ * @param perm The permutation table.
+ * @param n The size of the permutation table.
+ */
 void Raytracer::Utils::Perlin::permute(int *perm, int n)
 {
     for (int i = n - 1; i > 0; i--) {
@@ -81,6 +129,18 @@ void Raytracer::Utils::Perlin::permute(int *perm, int n)
     }
 }
 
+/**
+ * @brief Interpolate the noise value.
+ *
+ * This function interpolates the noise value.
+ *
+ * @param c The noise value.
+ * @param u The U coordinate.
+ * @param v The V coordinate.
+ * @param w The W coordinate.
+ *
+ * @return The interpolated noise value.
+ */
 double Raytracer::Utils::Perlin::perlinInterp(
     const Utils::Vec3 c[2][2][2], double u, double v, double w)
 {

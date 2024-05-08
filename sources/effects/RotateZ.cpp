@@ -1,5 +1,17 @@
 #include "effects/RotateZ.hpp"
 
+/**
+ * @brief Construct a new RotateZ object.
+ *
+ * This function constructs a new RotateZ object with the given object and
+ * angle. The object is rotated around the z-axis by the given angle. The
+ * bounding box of the object is updated with the rotated bounding box.
+ *
+ * @param object The object to rotate.
+ * @param angle The angle to rotate the object by.
+ *
+ * @return A new RotateZ object.
+ */
 Raytracer::Effects::RotateZ::RotateZ(
     std::shared_ptr<Interfaces::IHittable> object, double angle)
     : _object(object)
@@ -36,6 +48,17 @@ Raytracer::Effects::RotateZ::RotateZ(
     _bbox = Utils::AxisAlignedBBox(min, max);
 }
 
+/**
+ * @brief Check if the ray hits the rotated object.
+ *
+ * This function checks if the ray hits the rotated object. The function
+ * returns true if the ray hits the rotated object. The function returns false
+ * if the ray does not hit the rotated object. The function updates the payload
+ * with the hit information.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ */
 bool Raytracer::Effects::RotateZ::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
@@ -74,6 +97,13 @@ bool Raytracer::Effects::RotateZ::hit(const Core::Ray &ray,
     return true;
 }
 
+/**
+ * @brief Get the bounding box of the rotated object.
+ *
+ * This function returns the bounding box of the rotated object.
+ *
+ * @return The bounding box of the rotated object.
+ */
 Raytracer::Utils::AxisAlignedBBox
 Raytracer::Effects::RotateZ::boundingBox() const
 {

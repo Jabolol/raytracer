@@ -1,6 +1,20 @@
 #include "shapes/Quad.hpp"
 #include <memory>
 
+/**
+ * @brief Construct a new Quad object.
+ *
+ * This function constructs a new Quad object with the given point, u, v, and
+ * material. The quad is centered at the given point with the given u, v, and
+ * material.
+ *
+ * @param Q The point of the quad.
+ * @param u The u vector of the quad.
+ * @param v The v vector of the quad.
+ * @param material The material of the quad.
+ *
+ * @return A new Quad object.
+ */
 Raytracer::Shapes::Quad::Quad(const Utils::Point3 &Q, const Utils::Vec3 &u,
     const Utils::Vec3 &v, std::shared_ptr<Interfaces::IMaterial> material)
     : _Q(Q), _u(u), _v(v), _material(material)
@@ -13,6 +27,19 @@ Raytracer::Shapes::Quad::Quad(const Utils::Point3 &Q, const Utils::Vec3 &u,
     setBBox();
 }
 
+/**
+ * @brief Check if the ray hits the quad.
+ *
+ * This function checks if the ray hits the quad. The function returns true if
+ * the ray hits the quad. The function returns false if the ray does not hit
+ * the quad. The function updates the payload with the hit information.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ * @param payload The payload to update with the hit information.
+ *
+ * @return true if the ray hits the quad, false otherwise.
+ */
 bool Raytracer::Shapes::Quad::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
@@ -44,11 +71,23 @@ bool Raytracer::Shapes::Quad::hit(const Core::Ray &ray,
     return true;
 }
 
+/**
+ * @brief Get the bounding box of the quad.
+ *
+ * This function returns the bounding box of the quad.
+ *
+ * @return The bounding box of the quad.
+ */
 Raytracer::Utils::AxisAlignedBBox Raytracer::Shapes::Quad::boundingBox() const
 {
     return _bbox;
 }
 
+/**
+ * @brief Set the bounding box of the quad.
+ *
+ * This function sets the bounding box of the quad.
+ */
 void Raytracer::Shapes::Quad::setBBox()
 {
     Utils::AxisAlignedBBox diagOne = Utils::AxisAlignedBBox(_Q, _Q + _u + _v);
@@ -57,6 +96,20 @@ void Raytracer::Shapes::Quad::setBBox()
     _bbox = Utils::AxisAlignedBBox(diagOne, diagTwo);
 }
 
+/**
+ * @brief Check if the point is inside the quad.
+ *
+ * This function checks if the point is inside the quad. The function returns
+ * true if the point is inside the quad. The function returns false if the
+ * point is not inside the quad. The function updates the payload with the u
+ * and v values of the point.
+ *
+ * @param a The alpha value of the point.
+ * @param b The beta value of the point.
+ * @param payload The payload to update with the u and v values.
+ *
+ * @return True if the point is inside the quad, false otherwise.
+ */
 bool Raytracer::Shapes::Quad::isInterior(
     double a, double b, Core::Payload &payload) const
 {
@@ -72,6 +125,18 @@ bool Raytracer::Shapes::Quad::isInterior(
     return true;
 }
 
+/**
+ * @brief Construct a box object.
+ *
+ * This function constructs a box object with the given a, b, and material. The
+ * box is centered at the given a and b with the given material.
+ *
+ * @param a The first point of the box.
+ * @param b The second point of the box.
+ * @param material The material of the box.
+ *
+ * @return A new box object.
+ */
 std::shared_ptr<Raytracer::Core::Scene> Raytracer::Shapes::box(
     const Utils::Point3 &a, const Utils::Point3 &b,
     std::shared_ptr<Interfaces::IMaterial> material)

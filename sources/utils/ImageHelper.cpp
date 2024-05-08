@@ -2,11 +2,32 @@
 #include <fstream>
 #include <iostream>
 
+/**
+ * @brief Construct a new ImageHelper object.
+ *
+ * This function constructs a new ImageHelper object with the given filename.
+ * The ImageHelper object is used to load and read PPM images.
+ *
+ * @param filename The filename of the image.
+ *
+ * @return A new ImageHelper object.
+ */
 Raytracer::Utils::ImageHelper::ImageHelper(const char *filename)
 {
     load(filename);
 }
 
+/**
+ * @brief Load the image from the given filename.
+ *
+ * This function loads the image from the given filename. The image must be in
+ * PPM format (P6). The function returns true if the image was successfully
+ * loaded, and false otherwise.
+ *
+ * @param filename The filename of the image.
+ *
+ * @return True if the image was successfully loaded, and false otherwise.
+ */
 bool Raytracer::Utils::ImageHelper::load(const std::string &filename)
 {
     std::ifstream file(filename, std::ios::binary);
@@ -43,6 +64,17 @@ bool Raytracer::Utils::ImageHelper::load(const std::string &filename)
     return true;
 }
 
+/**
+ * @brief Get the pixel data at the given coordinates.
+ *
+ * This function returns the pixel data at the given coordinates. The function
+ * returns magenta if the coordinates are out of bounds.
+ *
+ * @param x The x-coordinate.
+ * @param y The y-coordinate.
+ *
+ * @return The pixel data at the given coordinates.
+ */
 const unsigned char *Raytracer::Utils::ImageHelper::pixelData(
     int x, int y) const
 {

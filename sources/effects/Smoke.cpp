@@ -1,6 +1,20 @@
 #include "effects/Smoke.hpp"
 #include "materials/Isotropic.hpp"
 
+/**
+ * @brief Construct a new Smoke object.
+ *
+ * This function constructs a new Smoke object with the given boundary,
+ * density, and texture. The smoke is created within the boundary with the
+ * given density and texture. The phase function of the smoke is set to
+ * isotropic with the given texture.
+ *
+ * @param boundary The boundary to create the smoke within.
+ * @param density The density of the smoke.
+ * @param texture The texture of the smoke.
+ *
+ * @return A new Smoke object.
+ */
 Raytracer::Effects::Smoke::Smoke(
     std::shared_ptr<Interfaces::IHittable> boundary, double density,
     std::shared_ptr<Interfaces::ITexture> texture)
@@ -10,6 +24,20 @@ Raytracer::Effects::Smoke::Smoke(
 {
 }
 
+/**
+ * @brief Construct a new Smoke object.
+ *
+ * This function constructs a new Smoke object with the given boundary,
+ * density, and albedo. The smoke is created within the boundary with the
+ * given density and albedo. The phase function of the smoke is set to
+ * isotropic with the given albedo.
+ *
+ * @param boundary The boundary to create the smoke within.
+ * @param density The density of the smoke.
+ * @param albedo The albedo of the smoke.
+ *
+ * @return A new Smoke object.
+ */
 Raytracer::Effects::Smoke::Smoke(
     std::shared_ptr<Interfaces::IHittable> boundary, double density,
     const Utils::Color &albedo)
@@ -19,6 +47,19 @@ Raytracer::Effects::Smoke::Smoke(
 {
 }
 
+/**
+ * @brief Check if the ray hits the smoke.
+ *
+ * This function checks if the ray hits the smoke. The function returns true if
+ * the ray hits the smoke. The function returns false if the ray does not hit
+ * the smoke. The function updates the payload with the hit information.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ * @param payload The payload to update with the hit information.
+ *
+ * @return True if the ray hits the smoke, false otherwise.
+ */
 bool Raytracer::Effects::Smoke::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
@@ -65,6 +106,13 @@ bool Raytracer::Effects::Smoke::hit(const Core::Ray &ray,
     return true;
 }
 
+/**
+ * @brief Get the bounding box of the smoke.
+ *
+ * This function returns the bounding box of the smoke.
+ *
+ * @return The bounding box of the smoke.
+ */
 Raytracer::Utils::AxisAlignedBBox
 Raytracer::Effects::Smoke::boundingBox() const
 {

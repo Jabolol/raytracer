@@ -1,5 +1,19 @@
 #include "shapes/Cylinder.hpp"
 
+/**
+ * @brief Construct a new Cylinder object.
+ *
+ * This function constructs a new Cylinder object with the given center,
+ * radius, height, and material. The cylinder is centered at the given center
+ * with the given radius, height, and material.
+ *
+ * @param center The center of the cylinder.
+ * @param radius The radius of the cylinder.
+ * @param height The height of the cylinder.
+ * @param material The material of the cylinder.
+ *
+ * @return A new Cylinder object.
+ */
 Raytracer::Shapes::Cylinder::Cylinder(const Utils::Point3 &center,
     double radius, double height,
     std::shared_ptr<Interfaces::IMaterial> material)
@@ -10,6 +24,19 @@ Raytracer::Shapes::Cylinder::Cylinder(const Utils::Point3 &center,
         _center + Utils::Vec3(_radius, _height, _radius));
 }
 
+/**
+ * @brief Check if the ray hits the cylinder.
+ *
+ * This function checks if the ray hits the cylinder. The function returns true
+ * if the ray hits the cylinder. The function returns false if the ray does not
+ * hit the cylinder. The function updates the payload with the hit information.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ * @param payload The payload to update with the hit information.
+ *
+ * @return true if the ray hits the cylinder, false otherwise.
+ */
 bool Raytracer::Shapes::Cylinder::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
@@ -58,6 +85,13 @@ bool Raytracer::Shapes::Cylinder::hit(const Core::Ray &ray,
     return true;
 }
 
+/**
+ * @brief Get the bounding box of the cylinder.
+ *
+ * This function returns the bounding box of the cylinder.
+ *
+ * @return The bounding box of the cylinder.
+ */
 Raytracer::Utils::AxisAlignedBBox
 Raytracer::Shapes::Cylinder::boundingBox() const
 {

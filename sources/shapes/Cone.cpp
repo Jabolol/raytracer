@@ -1,5 +1,19 @@
 #include "shapes/Cone.hpp"
 
+/**
+ * @brief Construct a new Cone object.
+ *
+ * This function constructs a new Cone object with the given center, radius,
+ * height, and material. The cone is centered at the given center with the
+ * given radius, height, and material.
+ *
+ * @param center The center of the cone.
+ * @param radius The radius of the cone.
+ * @param height The height of the cone.
+ * @param material The material of the cone.
+ *
+ * @return A new Cone object.
+ */
 Raytracer::Shapes::Cone::Cone(const Utils::Point3 &center, double radius,
     double height, std::shared_ptr<Interfaces::IMaterial> material)
     : _center(center), _radius(radius), _height(height), _material(material)
@@ -9,6 +23,19 @@ Raytracer::Shapes::Cone::Cone(const Utils::Point3 &center, double radius,
     _bbox = Utils::AxisAlignedBBox(min, max);
 }
 
+/**
+ * @brief Check if the ray hits the cone.
+ *
+ * This function checks if the ray hits the cone. The function returns true if
+ * the ray hits the cone. The function returns false if the ray does not hit
+ * the cone. The function updates the payload with the hit information.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ * @param payload The payload to update with the hit information.
+ *
+ * @return true if the ray hits the cone, false otherwise.
+ */
 bool Raytracer::Shapes::Cone::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
@@ -55,6 +82,13 @@ bool Raytracer::Shapes::Cone::hit(const Core::Ray &ray,
     return true;
 }
 
+/**
+ * @brief Get the bounding box of the cone.
+ *
+ * This function returns the bounding box of the cone.
+ *
+ * @return The bounding box of the cone.
+ */
 Raytracer::Utils::AxisAlignedBBox Raytracer::Shapes::Cone::boundingBox() const
 {
     return _bbox;

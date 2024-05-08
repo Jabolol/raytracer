@@ -25,6 +25,13 @@
 #include "textures/Noise.hpp"
 #include "textures/SolidColor.hpp"
 
+/**
+ * @brief Factory map for textures.
+ *
+ * This map is used to create textures based on their name.
+ * The key is the name of the texture and the value is a lambda function that
+ * creates the texture.
+ */
 Raytracer::Config::FactoryMap<Raytracer::Interfaces::ITexture,
     Raytracer::Config::ConfigTextures>
     Raytracer::Config::Factory::textures = {
@@ -85,6 +92,13 @@ Raytracer::Config::FactoryMap<Raytracer::Interfaces::ITexture,
         },
 };
 
+/**
+ * @brief Factory map for effects.
+ *
+ * This map is used to create effects based on their name.
+ * The key is the name of the effect and the value is a lambda function that
+ * creates the effect.
+ */
 Raytracer::Config::FactoryMap<Raytracer::Interfaces::IHittable,
     Raytracer::Config::ConfigEffects>
     Raytracer::Config::Factory::effects = {
@@ -153,8 +167,16 @@ Raytracer::Config::FactoryMap<Raytracer::Interfaces::IHittable,
 
                 return effect;
             },
-        }};
+        },
+};
 
+/**
+ * @brief Factory map for materials.
+ *
+ * This map is used to create materials based on their name.
+ * The key is the name of the material and the value is a lambda function that
+ * creates the material.
+ */
 Raytracer::Config::FactoryMap<Raytracer::Interfaces::IMaterial,
     Raytracer::Config::ConfigMaterials>
     Raytracer::Config::Factory::materials = {
@@ -233,7 +255,6 @@ Raytracer::Config::FactoryMap<Raytracer::Interfaces::IMaterial,
                         std::make_shared<Raytracer::Materials::Isotropic>(
                             args->color());
                 } else {
-                    // FIXME: No matching constructor for this call
                     material =
                         std::make_shared<Raytracer::Materials::Isotropic>(
                             args->texture());
@@ -256,6 +277,13 @@ Raytracer::Config::FactoryMap<Raytracer::Interfaces::IMaterial,
         },
 };
 
+/**
+ * @brief Factory map for shapes.
+ *
+ * This map is used to create shapes based on their name.
+ * The key is the name of the shape and the value is a lambda function that
+ * creates the shape.
+ */
 Raytracer::Config::FactoryMap<Raytracer::Interfaces::IHittable,
     Raytracer::Config::ConfigShapes>
     Raytracer::Config::Factory::shapes = {
@@ -321,7 +349,6 @@ Raytracer::Config::FactoryMap<Raytracer::Interfaces::IHittable,
                         args->center(), args->centerTwo(), args->radius(),
                         args->material());
                 } else {
-                    // FIXME: No matching constructor for this call
                     shape = std::make_shared<Raytracer::Shapes::Sphere>(
                         args->center(), args->radius(), args->material());
                 }

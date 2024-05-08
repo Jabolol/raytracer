@@ -1,12 +1,40 @@
-#include <algorithm>
 #include "utils/BVHNode.hpp"
+#include <algorithm>
 #include "core/Scene.hpp"
 
+/**
+ * @brief Construct a new BVHNode object.
+ *
+ * This function constructs a new BVHNode object with the given list of
+ * objects. The BVHNode is a bounding volume hierarchy node that represents
+ * a node in a BVH tree. The BVH tree is a binary tree that is used to
+ * accelerate ray tracing. The BVHNode is constructed from the given list of
+ * objects.
+ *
+ * @param list The list of objects.
+ *
+ * @return A new BVHNode object.
+ */
 Raytracer::Utils::BVHNode::BVHNode(Raytracer::Core::Scene list)
     : Raytracer::Utils::BVHNode(list.objects(), 0, list.objects().size())
 {
 }
 
+/**
+ * @brief Construct a new BVHNode object.
+ *
+ * This function constructs a new BVHNode object with the given list of
+ * objects, start index, and end index. The BVHNode is a bounding volume
+ * hierarchy node that represents a node in a BVH tree. The BVH tree is a
+ * binary tree that is used to accelerate ray tracing. The BVHNode is
+ * constructed from the given list of objects, start index, and end index.
+ *
+ * @param objects The list of objects.
+ * @param start The start index.
+ * @param end The end index.
+ *
+ * @return A new BVHNode object.
+ */
 Raytracer::Utils::BVHNode::BVHNode(
     std::vector<std::shared_ptr<Raytracer::Interfaces::IHittable>> &objects,
     size_t start, size_t end)
@@ -41,6 +69,19 @@ Raytracer::Utils::BVHNode::BVHNode(
     }
 }
 
+/**
+ * @brief Check if the ray hits the BVHNode.
+ *
+ * This function checks if the ray hits the BVHNode. The function returns true
+ * if the ray hits the BVHNode. The function returns false if the ray does not
+ * hit the BVHNode. The function updates the payload with the hit information.
+ *
+ * @param ray The ray to check for hits.
+ * @param interval The interval to check for hits.
+ * @param payload The payload to update with the hit information.
+ *
+ * @return true if the ray hits the BVHNode, false otherwise.
+ */
 bool Raytracer::Utils::BVHNode::hit(const Raytracer::Core::Ray &ray,
     Raytracer::Utils::Interval interval,
     Raytracer::Core::Payload &payload) const
@@ -57,12 +98,33 @@ bool Raytracer::Utils::BVHNode::hit(const Raytracer::Core::Ray &ray,
     return hitLeft || hitRight;
 }
 
+/**
+ * @brief Get the bounding box of the BVHNode.
+ *
+ * This function returns the bounding box of the BVHNode.
+ *
+ * @return The bounding box of the BVHNode.
+ */
 Raytracer::Utils::AxisAlignedBBox
 Raytracer::Utils::BVHNode::boundingBox() const
 {
     return _bbox;
 }
 
+/**
+ * @brief Compare two objects based on the given axis.
+ *
+ * This function compares two objects based on the given axis. The function
+ * returns true if the first object is less than the second object based on
+ * the given axis. The function returns false otherwise.
+ *
+ * @param a The first object.
+ * @param b The second object.
+ * @param axis The axis to compare the objects on.
+ *
+ * @return true if the first object is less than the second object based on the
+ * given axis, false otherwise.
+ */
 bool Raytracer::Utils::BVHNode::boxCompare(
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &a,
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &b, int axis)
@@ -73,6 +135,19 @@ bool Raytracer::Utils::BVHNode::boxCompare(
     return aInterval.min() < bInterval.min();
 }
 
+/**
+ * @brief Compare two objects based on the x-axis.
+ *
+ * This function compares two objects based on the x-axis. The function returns
+ * true if the first object is less than the second object based on the x-axis.
+ * The function returns false otherwise.
+ *
+ * @param a The first object.
+ * @param b The second object.
+ *
+ * @return true if the first object is less than the second object based on the
+ * x-axis, false otherwise.
+ */
 bool Raytracer::Utils::BVHNode::boxXCompare(
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &a,
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &b)
@@ -80,6 +155,19 @@ bool Raytracer::Utils::BVHNode::boxXCompare(
     return boxCompare(a, b, 0);
 }
 
+/**
+ * @brief Compare two objects based on the y-axis.
+ *
+ * This function compares two objects based on the y-axis. The function returns
+ * true if the first object is less than the second object based on the y-axis.
+ * The function returns false otherwise.
+ *
+ * @param a The first object.
+ * @param b The second object.
+ *
+ * @return true if the first object is less than the second object based on the
+ * y-axis, false otherwise.
+ */
 bool Raytracer::Utils::BVHNode::boxYCompare(
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &a,
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &b)
@@ -87,6 +175,19 @@ bool Raytracer::Utils::BVHNode::boxYCompare(
     return boxCompare(a, b, 1);
 }
 
+/**
+ * @brief Compare two objects based on the z-axis.
+ *
+ * This function compares two objects based on the z-axis. The function returns
+ * true if the first object is less than the second object based on the z-axis.
+ * The function returns false otherwise.
+ *
+ * @param a The first object.
+ * @param b The second object.
+ *
+ * @return true if the first object is less than the second object based on the
+ * z-axis, false otherwise.
+ */
 bool Raytracer::Utils::BVHNode::boxZCompare(
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &a,
     const std::shared_ptr<Raytracer::Interfaces::IHittable> &b)
