@@ -1,22 +1,37 @@
 #include "config/Manager.hpp"
+#include <array>
 #include <filesystem>
+#include <format>
 #include <functional>
 #include <iostream>
 #include <libconfig.hh>
 #include <memory>
-#include <stdexcept>
+#include <optional>
 #include <string>
+#include <variant>
 #include "arguments/Effects.hpp"
 #include "arguments/Materials.hpp"
 #include "arguments/Shapes.hpp"
 #include "arguments/Textures.hpp"
 #include "config/Factory.hpp"
+#include "exceptions/Argument.hpp"
+#include "exceptions/Cyclic.hpp"
+#include "exceptions/File.hpp"
+#include "exceptions/Missing.hpp"
+#include "exceptions/Parse.hpp"
 #include "interfaces/IArguments.hpp"
 #include "utils/VecN.hpp"
 #include "libconfig.h++"
 #include <type_traits>
 #include <unordered_map>
 
+/**
+ * @brief Construct a new Manager:: Manager object
+ *
+ * Initialize the argument map with the available arguments and their
+ * corresponding functions. Initialize the camera map with the available camera
+ * arguments and their corresponding functions.
+ */
 Raytracer::Config::Manager::Manager()
 {
     _argumentMap = {
@@ -48,21 +63,18 @@ Raytracer::Config::Manager::Manager()
                 std::filesystem::path p(path);
 
                 if (!std::filesystem::exists(p)) {
-                    std::cerr << "error: file `" << path << "` not found"
-                              << std::endl;
-                    throw std::runtime_error("file not found");
+                    throw Exceptions::FileException(
+                        std::format("file `{}` not found", path));
                 }
 
                 if (p.extension() != ".ppm") {
-                    std::cerr << "error: file `" << path
-                              << "` is not a PPM file" << std::endl;
-                    throw std::runtime_error("file is not a PPM file");
+                    throw Exceptions::FileException(
+                        std::format("file `{}` is not a PPM file", path));
                 }
 
                 if (std::filesystem::file_size(p) == 0) {
-                    std::cerr << "error: file `" << path << "` is empty"
-                              << std::endl;
-                    throw std::runtime_error("file is empty");
+                    throw Exceptions::FileException(
+                        std::format("file `{}` is empty", path));
                 }
 
                 std::shared_ptr<Interfaces::IArguments> argument =
@@ -104,7 +116,7 @@ Raytracer::Config::Manager::Manager()
                     return argument;
                 }
 
-                throw std::runtime_error(
+                throw Exceptions::ArgumentException(
                     "checker texture must have color_even and color_odd or "
                     "texture_even and texture_odd");
             },
@@ -117,6 +129,7 @@ Raytracer::Config::Manager::Manager()
                     retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
                     std::make_shared<Arguments::RotateX>(hittable, angle);
+                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
@@ -129,6 +142,7 @@ Raytracer::Config::Manager::Manager()
                     retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
                     std::make_shared<Arguments::RotateY>(hittable, angle);
+                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
@@ -141,6 +155,7 @@ Raytracer::Config::Manager::Manager()
                     retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
                     std::make_shared<Arguments::RotateZ>(hittable, angle);
+                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
@@ -158,6 +173,7 @@ Raytracer::Config::Manager::Manager()
                     std::shared_ptr<Interfaces::IArguments> argument =
                         std::make_shared<Arguments::Smoke>(
                             hittable, density, color);
+                    _shapes[args["target"]] = hittable;
 
                     return argument;
                 }
@@ -169,11 +185,12 @@ Raytracer::Config::Manager::Manager()
                     std::shared_ptr<Interfaces::IArguments> argument =
                         std::make_shared<Arguments::Smoke>(
                             hittable, density, texture);
+                    _shapes[args["target"]] = hittable;
 
                     return argument;
                 }
 
-                throw std::runtime_error(
+                throw Exceptions::ArgumentException(
                     "smoke effect must have color or texture");
             },
         },
@@ -212,7 +229,7 @@ Raytracer::Config::Manager::Manager()
                     return argument;
                 }
 
-                throw std::runtime_error(
+                throw Exceptions::ArgumentException(
                     "lambertian material must have color or texture");
             },
         },
@@ -254,7 +271,7 @@ Raytracer::Config::Manager::Manager()
                     return argument;
                 }
 
-                throw std::runtime_error(
+                throw Exceptions::ArgumentException(
                     "diffuse_light material must have color or texture");
             },
         },
@@ -280,7 +297,7 @@ Raytracer::Config::Manager::Manager()
                     return argument;
                 }
 
-                throw std::runtime_error(
+                throw Exceptions::ArgumentException(
                     "isotropic material must have color or texture");
             },
         },
@@ -385,29 +402,121 @@ Raytracer::Config::Manager::Manager()
                     return argument;
                 }
 
-                throw std::runtime_error("sphere shape must have center or "
-                                         "center_one and center_two");
+                throw Exceptions::ArgumentException(
+                    "sphere shape must have center or "
+                    "center_one and center_two");
+            },
+        },
+    };
+    _cameraMap = {
+        {
+            "aspect_ratio",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.aspectRatio(std::get<double>(value));
+            },
+        },
+        {
+            "image_width",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.imageWidth(std::get<int>(value));
+            },
+        },
+        {
+            "samples_per_pixel",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.samplesPerPixel(std::get<int>(value));
+            },
+        },
+        {
+            "max_depth",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.maxDepth(std::get<int>(value));
+            },
+        },
+        {
+            "background_color",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.backgroundColor(
+                    std::get<Raytracer::Utils::Color>(value));
+            },
+        },
+        {
+            "v_fov",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.vFov(std::get<int>(value));
+            },
+        },
+        {
+            "look_from",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.lookFrom(std::get<Raytracer::Utils::Vec3>(value));
+            },
+        },
+        {
+            "look_at",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.lookAt(std::get<Raytracer::Utils::Vec3>(value));
+            },
+        },
+        {
+            "v_up",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.vUp(std::get<Raytracer::Utils::Vec3>(value));
+            },
+        },
+        {
+            "defocus_angle",
+            [](Raytracer::Core::Camera &camera, CameraTypes &value) {
+                camera.defocusAngle(std::get<double>(value));
             },
         },
     };
 }
 
-bool Raytracer::Config::Manager::parse(std::string path)
+/**
+ * @brief Parse the configuration file
+ *
+ * Parse the configuration file and load the scene, textures, materials, shapes
+ * and effects. If an error occurs while parsing the file, an exception is
+ * thrown.
+ *
+ * @param path Path to the configuration file
+ * @throw Exceptions::ParseException if an error occurs while parsing the file
+ * @throw Exceptions::CyclicException if a cyclic dependency is detected
+ * @throw Exceptions::MissingException if a path is not found
+ * @throw Exceptions::ParseException if a path is not of the correct type
+ * @throw Exceptions::MissingException if an argument is not found
+ *
+ * @return void
+ */
+void Raytracer::Config::Manager::parse(std::string path)
 {
+    libconfig::Config config;
+
     try {
-        _config.readFile(path.c_str());
+        config.readFile(path.c_str());
     } catch (const libconfig::FileIOException &e) {
         std::cerr << "I/O error while reading file." << std::endl;
-        return false;
+        throw Exceptions::ParseException("I/O error while reading file.");
     } catch (const libconfig::ParseException &e) {
-        std::cerr << "Parse exception at " << e.getFile() << ":" << e.getLine()
-                  << " - " << e.getError() << std::endl;
-        return false;
+        throw Exceptions::ParseException(
+            std::format("Parse exception at {}:{} - {}", e.getFile(),
+                e.getLine(), e.getError()));
     }
 
-    const libconfig::Setting &root = _config.getRoot();
+    const libconfig::Setting &root = config.getRoot();
     try {
         const libconfig::Setting &scene = root["scene"];
+        std::string id = scene["id"];
+
+        if (std::find(_ids.begin(), _ids.end(), id) != _ids.end()) {
+            throw Exceptions::CyclicException(std::format(
+                "cyclic dependency detected (id `{}` already loaded)", id));
+        }
+
+        _ids.push_back(id);
+        parseImports(scene["imports"]);
+        parseCamera(scene["camera"]);
         genericParse<Interfaces::ITexture, ConfigTextures>(
             scene["textures"], _textures);
         genericParse<Interfaces::IMaterial, ConfigMaterials>(
@@ -417,76 +526,290 @@ bool Raytracer::Config::Manager::parse(std::string path)
         genericParse<Interfaces::IHittable, ConfigEffects>(
             scene["effects"], _effects);
     } catch (const libconfig::SettingNotFoundException &e) {
-        std::cerr << "error: path `" << e.getPath()
-                  << "` not found, aborting..." << std::endl;
-        return false;
-    } catch (const std::runtime_error &e) {
-        std::cerr << "error: " << e.what() << std::endl;
-        return false;
+        throw Exceptions::ParseException(
+            std::format("path `{}` not found, aborting...", e.getPath()));
+    } catch (const libconfig::SettingTypeException &e) {
+        throw Exceptions::ParseException(
+            std::format("{} is not of the correct type", e.getPath()));
     }
-    return true;
 }
 
+/**
+ * @brief Generic parse function
+ *
+ * Parse the configuration file, create the objects and store them in the
+ * container map. If an error occurs while parsing the file, an exception is
+ * thrown.
+ *
+ * @tparam I Interface that the object must implement
+ * @tparam E Enum that the object must be associated with
+ * @param setting Setting to parse
+ * @param containerMap Map to store the parsed objects
+ * @throw Exceptions::CyclicException if a cyclic dependency is detected
+ *
+ * @return void
+ */
 template <typename I, typename E>
     requires std::is_enum_v<E>
 void Raytracer::Config::Manager::genericParse(
-    const libconfig::Setting &setting,
-    std::unordered_map<std::string, std::shared_ptr<I>> &containerMap)
+    const libconfig::Setting &setting, ManagerMap<I> &containerMap)
 {
     for (int i = 0; i < setting.getLength(); i++) {
         const libconfig::Setting &root = setting[i];
+        std::string id = root["id"];
+
+        if (containerMap.contains(id)) {
+            throw Exceptions::CyclicException(std::format(
+                "cyclic dependency detected (id `{}` already loaded)", id));
+        }
+
         std::string type = root["type"];
         libconfig::Setting &args = root["args"];
         std::shared_ptr<Interfaces::IArguments> argument = create(type, args);
 
         if (argument == nullptr) {
-            throw std::runtime_error("failed to create argument");
+            throw Exceptions::MissingException("failed to create argument");
         }
 
         std::shared_ptr<I> resource = Factory::get<I, E>(type, argument);
 
-        containerMap[root["id"].c_str()] = resource;
+        containerMap[id] = resource;
     }
 }
 
+/**
+ * @brief Create an argument object
+ *
+ * Create an argument object based on the type and arguments provided. If the
+ * type is not found in the argument map, return a nullptr.
+ *
+ * @param type Type of the argument
+ * @param args Arguments to pass to the argument object
+ * @throw libconfig::SettingTypeException if the type is not found in the
+ * argument map
+ *
+ * @return std::shared_ptr<Raytracer::Interfaces::IArguments> Argument object
+ */
 std::shared_ptr<Raytracer::Interfaces::IArguments>
 Raytracer::Config::Manager::create(
     const std::string &type, libconfig::Setting &args)
 {
     if (!_argumentMap.contains(type)) {
-        std::cerr << "error: type `" << type << "` not found, aborting..."
-                  << std::endl;
         return nullptr;
     }
 
     try {
         return _argumentMap[type](args);
     } catch (libconfig::SettingTypeException &e) {
-        std::cerr << "error: " << e.getPath() << " is not of the correct type"
-                  << std::endl;
         return nullptr;
     }
 }
 
+/**
+ * @brief Parse a color
+ *
+ * Parse a color from the configuration file and return it as a Color object.
+ *
+ * @param color Color to parse
+ *
+ * @return Raytracer::Utils::Color Parsed color
+ */
 Raytracer::Utils::Color Raytracer::Config::Manager::parseColor(
     const libconfig::Setting &color)
 {
     return Utils::Color(color[0], color[1], color[2]);
 }
 
+/**
+ * @brief Retrieve an object from the container map
+ *
+ * Retrieve an object from the container map based on the name provided. If the
+ * name is not found in the arguments, an exception is thrown. If the name is
+ * not found in the map, an exception is thrown.
+ *
+ * @tparam I Interface that the object must implement
+ * @param arguments Arguments to retrieve the object from
+ * @param containerMap Map to retrieve the object from
+ * @param name Name of the object to retrieve
+ * @throw Exceptions::MissingException if the argument is not found in the
+ * arguments
+ * @throw Exceptions::MissingException if the argument is not found in the map
+ *
+ * @return std::shared_ptr<I> Retrieved object
+ */
 template <typename I>
 std::shared_ptr<I> Raytracer::Config::Manager::retrieve(
-    const libconfig::Setting &arguments,
-    std::unordered_map<std::string, std::shared_ptr<I>> &containerMap,
+    const libconfig::Setting &arguments, ManagerMap<I> &containerMap,
     const std::string &name)
 {
     if (!arguments.exists(name)) {
-        throw std::runtime_error("error: " + name + " not found");
+        throw Exceptions::MissingException(std::format(
+            "argument `{}` not found in {}", name, arguments.getPath()));
     }
 
     if (!containerMap.contains(arguments[name])) {
-        throw std::runtime_error("error: " + name + " not found");
+        throw Exceptions::MissingException(
+            std::format("argument `{}` not found in map", name));
     }
 
     return containerMap.at(arguments[name]);
+}
+
+/**
+ * @brief Parse the imports
+ *
+ * Parse the imports from the configuration file and load the files. If an
+ * error occurs while parsing the file, an exception is thrown.
+ *
+ * @param imports Imports to parse
+ * @throw Exceptions::ParseException if an error occurs while parsing the file
+ * @throw Exceptions::MissingException if a path is not found
+ *
+ * @return void
+ */
+void Raytracer::Config::Manager::parseImports(
+    const libconfig::Setting &imports)
+{
+    for (int i = 0; i < imports.getLength(); i++) {
+        libconfig::Setting &root = imports[i];
+        parse(root["path"]);
+    }
+}
+
+/**
+ * @brief Extract the camera arguments
+ *
+ * Extract the camera arguments from the configuration file and set them in the
+ * camera object.
+ *
+ * @tparam I Index of the argument
+ * @param setting Setting to extract the arguments from
+ * @param keys Keys to extract the arguments from
+ *
+ * @return void
+ */
+template <std::size_t I>
+void Raytracer::Config::Manager::extract(
+    const libconfig::Setting &setting, std::array<std::string, 10> &keys)
+{
+    if constexpr (I != 0) {
+        constexpr std::size_t F = I - 1;
+        using T = Raytracer::Config::KeyType<F>;
+        std::optional<T> value = parseOptional<T>(setting, keys[F]);
+
+        if (value.has_value()) {
+            CameraTypes arg = value.value();
+            _cameraMap[keys[F]](_camera, arg);
+        }
+
+        extract<F>(setting, keys);
+    }
+}
+
+/**
+ * @brief Parse the camera arguments
+ *
+ * Parse the camera arguments from the configuration file and set them in the
+ * camera object.
+ *
+ * @param camera Camera arguments to parse
+ * @throw Exceptions::MissingException if an argument is not found
+ *
+ * @return void
+ */
+void Raytracer::Config::Manager::parseCamera(const libconfig::Setting &camera)
+{
+    std::array<std::string, 10> keys = {
+        "aspect_ratio",
+        "image_width",
+        "samples_per_pixel",
+        "max_depth",
+        "background_color",
+        "v_fov",
+        "look_from",
+        "look_at",
+        "v_up",
+        "defocus_angle",
+    };
+
+    try {
+        extract<10>(camera, keys);
+    } catch (const std::bad_variant_access &e) {
+        throw Exceptions::MissingException(
+            "invalid variant access for camera argument");
+    }
+}
+
+/**
+ * @brief Parse an optional argument
+ *
+ * Parse an optional argument from the configuration file and return it as an
+ * optional object.
+ *
+ * @tparam T Type of the argument
+ * @param setting Setting to parse
+ * @param name Name of the argument
+ *
+ * @return std::optional<T> Parsed optional argument
+ */
+template <typename T>
+    requires std::is_arithmetic_v<T>
+std::optional<T> Raytracer::Config::Manager::parseOptional(
+    const libconfig::Setting &setting, std::string &name)
+{
+    if (!setting.exists(name)) {
+        return std::nullopt;
+    }
+
+    return setting[name];
+}
+
+/**
+ * @brief Parse an optional argument
+ *
+ * Parse an optional argument from the configuration file and return it as an
+ * optional object.
+ *
+ * @tparam T Type of the argument
+ * @param setting Setting to parse
+ * @param name Name of the argument
+ *
+ * @return std::optional<T> Parsed optional argument
+ */
+template <typename T>
+    requires std::is_same_v<T, Raytracer::Utils::Vec3>
+std::optional<T> Raytracer::Config::Manager::parseOptional(
+    const libconfig::Setting &setting, std::string &name)
+{
+    if (!setting.exists(name)) {
+        return std::nullopt;
+    }
+
+    return Raytracer::Config::Manager::parseColor(setting[name]);
+}
+
+/**
+ * @brief Bootstrap the configuration
+ *
+ * Bootstrap the configuration by adding the shapes to the world.
+ *
+ * @return void
+ */
+void Raytracer::Config::Manager::bootstrap()
+{
+    for (auto &[id, shape] : _shapes) {
+        _world.add(shape);
+    }
+}
+
+/**
+ * @brief Render the scene
+ *
+ * Render the scene using the camera and the world.
+ *
+ * @return void
+ */
+void Raytracer::Config::Manager::render()
+{
+    _camera.render(_world);
 }
