@@ -91,7 +91,7 @@ namespace Raytracer::Arguments
       public:
         Translate(
             std::shared_ptr<Interfaces::IHittable> object, Utils::Vec3 offset)
-            : _offset(offset)
+            : _offset(offset), _object(object)
         {
         }
         GET_SET(Utils::Vec3, offset);
