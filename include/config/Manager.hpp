@@ -1,7 +1,9 @@
 #include <functional>
 #include <libconfig.hh>
 #include <memory>
+#include <optional>
 #include <string>
+#include <variant>
 #include "Common.hpp"
 #include "core/Camera.hpp"
 #include "core/Scene.hpp"
@@ -50,7 +52,7 @@ namespace Raytracer::Config
         Manager();
         void parse(std::string path);
         void bootstrap();
-        void render();
+        void render(bool fast);
         GET_SET(Raytracer::Core::Scene, world);
         GET_SET(Raytracer::Core::Camera, camera);
 
