@@ -52,6 +52,22 @@ bool Raytracer::Shapes::Cone::hit(const Core::Ray &ray,
         - oc.y() * oc.y() * _radius * _radius / (_height * _height);
     double discriminant = b * b - 4 * a * c;
 
+    double top_cap = _center.y() + _height;
+    double t = ((top_cap - ray.origin().y()) / ray.direction().y());
+    if (interval.contains(t)) {
+        double x = ray.origin().x() + t * ray.direction().x();
+        double z = ray.origin().z() + t * ray.direction().z();
+        double distance_squared = (x - _center.x()) * (x - _center.x())
+            + (z - _center.z()) * (z - _center.z());
+        if (distance_squared <= _radius * _radius) {
+            payload.t(t);
+            payload.point(ray.at(payload.t()));
+            payload.setFaceNormal(ray, Utils::Vec3(0, 1, 0));
+            payload.material(_material);
+            return true;
+        }
+    }
+
     if (discriminant < 0) {
         return false;
     }

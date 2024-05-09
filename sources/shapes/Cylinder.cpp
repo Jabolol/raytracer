@@ -40,9 +40,38 @@ Raytracer::Shapes::Cylinder::Cylinder(const Utils::Point3 &center,
 bool Raytracer::Shapes::Cylinder::hit(const Core::Ray &ray,
     Utils::Interval interval, Core::Payload &payload) const
 {
-    // TODO: Implement cylinder caps intersection
     Utils::Vec3 direction = ray.direction();
     Utils::Point3 origin = ray.origin();
+
+    double t_cap = (_center.y() - origin.y()) / direction.y();
+    if (interval.surrounds(t_cap)) {
+        Utils::Point3 hit_point = ray.at(t_cap);
+        double dist_squared =
+            (hit_point.x() - _center.x()) * (hit_point.x() - _center.x())
+            + (hit_point.z() - _center.z()) * (hit_point.z() - _center.z());
+        if (dist_squared <= _radius * _radius) {
+            payload.t(t_cap);
+            payload.point(hit_point);
+            payload.setFaceNormal(ray, Utils::Vec3(0, 1, 0));
+            payload.material(_material);
+            return true;
+        }
+    }
+
+    t_cap = (_center.y() + _height - origin.y()) / direction.y();
+    if (interval.surrounds(t_cap)) {
+        Utils::Point3 hit_point = ray.at(t_cap);
+        double dist_squared =
+            (hit_point.x() - _center.x()) * (hit_point.x() - _center.x())
+            + (hit_point.z() - _center.z()) * (hit_point.z() - _center.z());
+        if (dist_squared <= _radius * _radius) {
+            payload.t(t_cap);
+            payload.point(hit_point);
+            payload.setFaceNormal(ray, Utils::Vec3(0, -1, 0));
+            payload.material(_material);
+            return true;
+        }
+    }
 
     double a = std::pow(direction.x(), 2) + std::pow(direction.z(), 2);
     double h = 2
