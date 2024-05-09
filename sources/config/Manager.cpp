@@ -129,7 +129,6 @@ Raytracer::Config::Manager::Manager()
                     retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
                     std::make_shared<Arguments::RotateX>(hittable, angle);
-                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
@@ -142,7 +141,6 @@ Raytracer::Config::Manager::Manager()
                     retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
                     std::make_shared<Arguments::RotateY>(hittable, angle);
-                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
@@ -155,7 +153,6 @@ Raytracer::Config::Manager::Manager()
                     retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
                     std::make_shared<Arguments::RotateZ>(hittable, angle);
-                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
@@ -173,7 +170,6 @@ Raytracer::Config::Manager::Manager()
                     std::shared_ptr<Interfaces::IArguments> argument =
                         std::make_shared<Arguments::Smoke>(
                             hittable, density, color);
-                    _shapes[args["target"]] = hittable;
 
                     return argument;
                 }
@@ -185,7 +181,6 @@ Raytracer::Config::Manager::Manager()
                     std::shared_ptr<Interfaces::IArguments> argument =
                         std::make_shared<Arguments::Smoke>(
                             hittable, density, texture);
-                    _shapes[args["target"]] = hittable;
 
                     return argument;
                 }
@@ -202,7 +197,6 @@ Raytracer::Config::Manager::Manager()
                     retrieve<Interfaces::IHittable>(args, _shapes, "target");
                 std::shared_ptr<Interfaces::IArguments> argument =
                     std::make_shared<Arguments::Translate>(hittable, offset);
-                _shapes[args["target"]] = hittable;
 
                 return argument;
             },
@@ -236,7 +230,7 @@ Raytracer::Config::Manager::Manager()
         {
             "dielectric",
             [](libconfig::Setting &args) {
-                double refraction = args["refractionIndex"];
+                double refraction = args["refraction_index"];
 
                 if (args.exists(("color"))) {
                     libconfig::Setting &rgb = args["color"];
@@ -573,6 +567,11 @@ void Raytracer::Config::Manager::genericParse(
 
         std::shared_ptr<I> resource = Factory::get<I, E>(type, argument);
 
+        if (std::string(setting.getName()) == "effects") {
+            containerMap[root["args"]["target"]] = resource;
+            continue;
+        }
+
         containerMap[id] = resource;
     }
 }
@@ -798,18 +797,31 @@ std::optional<T> Raytracer::Config::Manager::parseOptional(
 void Raytracer::Config::Manager::bootstrap()
 {
     for (auto &[id, shape] : _shapes) {
-        _world.add(shape);
+        if (_effects.contains(id)) {
+            _world.add(_effects.at(id));
+        } else {
+            _world.add(shape);
+        }
     }
 }
 
 /**
  * @brief Render the scene
  *
- * Render the scene using the camera and the world.
+ * Render the scene using the camera and the world. If the fast flag is set,
+ * the rendering is done in fast mode, which reduces the image width, the
+ * samples per pixel and the maximum depth.
+ *
+ * @param fast Fast rendering mode
  *
  * @return void
  */
-void Raytracer::Config::Manager::render()
+void Raytracer::Config::Manager::render(bool fast)
 {
+    if (fast) {
+        _camera.imageWidth(300);
+        _camera.samplesPerPixel(10);
+        _camera.maxDepth(50);
+    }
     _camera.render(_world);
 }
