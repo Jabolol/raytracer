@@ -1,11 +1,41 @@
 # raytracer
 
-> [!WARNING]\
-> This project is a work in progress.
+This project is a raytracer written in C++. The goal of this project is to
+implement a raytracer that can render scenes with `spheres`, `planes`,
+`lights`... The raytracer supports features such as `translation`, `rotation`,
+and drop `shadows`. The raytracer outputs the rendered image to a PPM file.
 
-![](./assets/cornell_glass.png)
+# development
+
+1. Clone the repository.
+
+```sh
+git clone git@github.com:Jabolol/raytracer.git .
+```
+
+2. Create a build directory.
+
+```sh
+mkdir build && cd build
+```
+
+3. Build the project.
+
+```sh
+cmake .. -GNinja -DBUILD_DOC=OFF -DBUILD_TEST=OFF
+```
+
+4. Run the raytracer with a provided scene.
+
+```sh
+./raytracer ../scenes/sphere.cfg > sphere.ppm
+```
+
+# features
 
 ## must
+
+![](./assets/must.png)
 
 - [x] sphere
 - [x] plane
@@ -20,12 +50,16 @@
 
 ## should
 
-- [ ] cylinder
-- [ ] cone
+![](./assets/should.png)
+
+- [x] cylinder
+- [x] cone
 - [x] rotation
 - [x] drop shadows
 
 ## could
+
+![](./assets/could.png)
 
 > [!NOTE]\
 > These would give up to `13` bonus points.
@@ -44,6 +78,8 @@
 - [x] scene preview using a fast renderer (2)
 
 ## bonus
+
+![](./assets/bonus.png)
 
 - [x] motion blur
 - [x] depth of field
