@@ -28,7 +28,7 @@ cmake .. -GNinja -DBUILD_DOC=OFF -DBUILD_TEST=OFF
 4. Run the raytracer with a provided scene.
 
 ```sh
-./raytracer ../scenes/sphere.cfg > sphere.ppm
+./raytracer --config ../scenes/cornell.cfg > cornell.ppm
 ```
 
 # features
