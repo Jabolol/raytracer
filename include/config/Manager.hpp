@@ -50,7 +50,7 @@ namespace Raytracer::Config
 
       public:
         Manager();
-        void parse(std::string path);
+        bool parse(std::string path);
         void bootstrap();
         void render(bool fast);
         GET_SET(Raytracer::Core::Scene, world);
