@@ -356,4 +356,16 @@ Raytracer::Config::FactoryMap<Raytracer::Interfaces::IHittable,
                 return shape;
             },
         },
+        {
+            "box",
+            [](std::shared_ptr<Interfaces::IArguments> raw) {
+                std::shared_ptr<Arguments::Box> args =
+                    std::dynamic_pointer_cast<Arguments::Box>(raw);
+                std::shared_ptr<Raytracer::Interfaces::IHittable> shape =
+                    Raytracer::Shapes::box(
+                        args->pointOne(), args->pointTwo(), args->material());
+
+                return shape;
+            },
+        },
 };
