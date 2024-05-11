@@ -39,13 +39,7 @@ Raytracer::Utils::BVHNode::BVHNode(
     std::vector<std::shared_ptr<Raytracer::Interfaces::IHittable>> &objects,
     size_t start, size_t end)
 {
-    _bbox = AxisAlignedBBox::Empty;
-
-    for (size_t i = start; i < end; i++) {
-        _bbox = AxisAlignedBBox(_bbox, objects[i]->boundingBox());
-    }
-
-    int axis = _bbox.longestAxis();
+    int axis = randomInt(0, 2);
 
     auto fn = (axis == 0) ? boxXCompare
         : (axis == 1)     ? boxYCompare
@@ -67,6 +61,8 @@ Raytracer::Utils::BVHNode::BVHNode(
         _right =
             std::make_shared<Raytracer::Utils::BVHNode>(objects, mid, end);
     }
+
+    _bbox = AxisAlignedBBox(_left->boundingBox(), _right->boundingBox());
 }
 
 /**
