@@ -20,6 +20,7 @@
 #include "exceptions/Missing.hpp"
 #include "exceptions/Parse.hpp"
 #include "interfaces/IArguments.hpp"
+#include "utils/BVHNode.hpp"
 #include "utils/VecN.hpp"
 #include "libconfig.h++"
 #include <type_traits>
@@ -401,6 +402,21 @@ Raytracer::Config::Manager::Manager()
                     "center_one and center_two");
             },
         },
+        {
+            "box",
+            [this](libconfig::Setting &args) {
+                Utils::Point3 pointOne = parseColor(args["point_one"]);
+                Utils::Point3 pointTwo = parseColor(args["point_two"]);
+                std::shared_ptr<Interfaces::IMaterial> material =
+                    retrieve<Interfaces::IMaterial>(
+                        args, _materials, "material");
+                std::shared_ptr<Interfaces::IArguments> argument =
+                    std::make_shared<Arguments::Box>(
+                        pointOne, pointTwo, material);
+
+                return argument;
+            },
+        },
     };
     _cameraMap = {
         {
@@ -483,7 +499,7 @@ Raytracer::Config::Manager::Manager()
  *
  * @return void
  */
-void Raytracer::Config::Manager::parse(std::string path)
+bool Raytracer::Config::Manager::parse(std::string path)
 {
     libconfig::Config config;
 
@@ -491,11 +507,12 @@ void Raytracer::Config::Manager::parse(std::string path)
         config.readFile(path.c_str());
     } catch (const libconfig::FileIOException &e) {
         std::cerr << "I/O error while reading file." << std::endl;
-        throw Exceptions::ParseException("I/O error while reading file.");
+        return false;
     } catch (const libconfig::ParseException &e) {
-        throw Exceptions::ParseException(
-            std::format("Parse exception at {}:{} - {}", e.getFile(),
-                e.getLine(), e.getError()));
+        std::cerr << std::format("Parse exception at {}:{} - {}", e.getFile(),
+            e.getLine(), e.getError())
+                  << std::endl;
+        return false;
     }
 
     const libconfig::Setting &root = config.getRoot();
@@ -504,8 +521,10 @@ void Raytracer::Config::Manager::parse(std::string path)
         std::string id = scene["id"];
 
         if (std::find(_ids.begin(), _ids.end(), id) != _ids.end()) {
-            throw Exceptions::CyclicException(std::format(
-                "cyclic dependency detected (id `{}` already loaded)", id));
+            std::cerr << std::format(
+                "cyclic dependency detected (id `{}` already loaded)", id)
+                      << std::endl;
+            return false;
         }
 
         _ids.push_back(id);
@@ -520,12 +539,32 @@ void Raytracer::Config::Manager::parse(std::string path)
         genericParse<Interfaces::IHittable, ConfigEffects>(
             scene["effects"], _effects);
     } catch (const libconfig::SettingNotFoundException &e) {
-        throw Exceptions::ParseException(
-            std::format("path `{}` not found, aborting...", e.getPath()));
+        std::cerr << std::format(
+            "path `{}` not found, aborting...", e.getPath())
+                  << std::endl;
+        return false;
     } catch (const libconfig::SettingTypeException &e) {
-        throw Exceptions::ParseException(
-            std::format("{} is not of the correct type", e.getPath()));
+        std::cerr << std::format("{} is not of the correct type", e.getPath())
+                  << std::endl;
+        return false;
+    } catch (const Exceptions::CyclicException &e) {
+        std::cerr << e.what() << std::endl;
+        return false;
+    } catch (const Exceptions::MissingException &e) {
+        std::cerr << e.what() << std::endl;
+        return false;
+    } catch (const Exceptions::ArgumentException &e) {
+        std::cerr << e.what() << std::endl;
+        return false;
+    } catch (const Exceptions::FileException &e) {
+        std::cerr << e.what() << std::endl;
+        return false;
+    } catch (const Exceptions::ParseException &e) {
+        std::cerr << e.what() << std::endl;
+        return false;
     }
+
+    return true;
 }
 
 /**
@@ -568,7 +607,16 @@ void Raytracer::Config::Manager::genericParse(
         std::shared_ptr<I> resource = Factory::get<I, E>(type, argument);
 
         if (std::string(setting.getName()) == "effects") {
-            containerMap[root["args"]["target"]] = resource;
+            std::shared_ptr<Raytracer::Interfaces::IHittable> instance =
+                std::dynamic_pointer_cast<Raytracer::Interfaces::IHittable>(
+                    resource);
+
+            if (instance == nullptr) {
+                throw Exceptions::MissingException(
+                    "hittable is not an instance of IHittable");
+            }
+
+            _shapes[root["args"]["target"]] = instance;
             continue;
         }
 
@@ -797,11 +845,7 @@ std::optional<T> Raytracer::Config::Manager::parseOptional(
 void Raytracer::Config::Manager::bootstrap()
 {
     for (auto &[id, shape] : _shapes) {
-        if (_effects.contains(id)) {
-            _world.add(_effects.at(id));
-        } else {
-            _world.add(shape);
-        }
+        _world.add(shape);
     }
 }
 
@@ -818,10 +862,13 @@ void Raytracer::Config::Manager::bootstrap()
  */
 void Raytracer::Config::Manager::render(bool fast)
 {
+    Core::Scene bvh = Core::Scene(std::make_shared<Utils::BVHNode>(_world));
+
     if (fast) {
         _camera.imageWidth(300);
         _camera.samplesPerPixel(10);
         _camera.maxDepth(50);
     }
-    _camera.render(_world);
+
+    _camera.render(bvh);
 }
