@@ -35,6 +35,9 @@ cmake .. -GNinja -DBUILD_DOC=OFF -DBUILD_TEST=OFF
 
 ## must
 
+> [!TIP]\
+> The config file can be found at [`config/must.cfg`](./config/must.cfg)
+
 ![](./assets/must.png)
 
 - [x] sphere
@@ -50,6 +53,9 @@ cmake .. -GNinja -DBUILD_DOC=OFF -DBUILD_TEST=OFF
 
 ## should
 
+> [!TIP]\
+> The config file can be found at [`config/should.cfg`](./config/should.cfg)
+
 ![](./assets/should.png)
 
 - [x] cylinder
@@ -59,10 +65,10 @@ cmake .. -GNinja -DBUILD_DOC=OFF -DBUILD_TEST=OFF
 
 ## could
 
-![](./assets/could.png)
+> [!TIP]\
+> The config file can be found at [`config/could.cfg`](./config/could.cfg)
 
-> [!NOTE]\
-> These would give up to `13` bonus points.
+![](./assets/could.png)
 
 - [x] multiple directional lights (0.5)
 - [x] colored lights (0.5)
@@ -79,10 +85,21 @@ cmake .. -GNinja -DBUILD_DOC=OFF -DBUILD_TEST=OFF
 
 ## bonus
 
+> [!TIP]\
+> The config file can be found at [`config/bonus.cfg`](./config/bonus.cfg)
+
 ![](./assets/bonus.png)
 
+- [x] quad box
 - [x] motion blur
 - [x] depth of field
 - [x] quadrilaterals
 - [x] constant medium (fog)
 - [x] tinted dielectric
+
+## cornell box
+
+> [!TIP]\
+> The config file can be found at [`config/cornell.cfg`](./config/cornell.cfg)
+
+![](./assets/cornell_glass.png)
