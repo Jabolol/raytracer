@@ -119,6 +119,24 @@ namespace Raytracer::Arguments
         GET_SET(std::shared_ptr<Interfaces::IMaterial>, material);
         ARG_KIND(_kind);
     };
+
+    class Box : public Interfaces::IArguments {
+      private:
+        Utils::Point3 _pointOne;
+        Utils::Point3 _pointTwo;
+        std::shared_ptr<Interfaces::IMaterial> _material = nullptr;
+
+      public:
+        Box(Utils::Point3 pointOne, Utils::Point3 pointTwo,
+            std::shared_ptr<Interfaces::IMaterial> material)
+            : _pointOne(pointOne), _pointTwo(pointTwo), _material(material)
+        {
+        }
+        GET_SET(Utils::Point3, pointOne);
+        GET_SET(Utils::Point3, pointTwo);
+        GET_SET(std::shared_ptr<Interfaces::IMaterial>, material);
+        ARG_KIND(ArgumentKind::ARG_BOX);
+    };
 } // namespace Raytracer::Arguments
 
 #endif /* __ARG_SHAPES_HPP__ */
