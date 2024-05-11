@@ -9,20 +9,27 @@ int main(int argc, char **argv)
         return 84;
     }
 
-    std::string flag = "--fast";
-    bool fast = std::find(argv, argv + argc, flag) != argv + argc;
-    auto path = std::find_if(argv + 1, argv + argc, [](const char *arg) {
-        return arg[0] != '-';
-    });
+    bool fast = false;
+    std::string path = "/dev/null";
 
-    try {
-        manager.parse(*path);
-        manager.bootstrap();
-        manager.render(fast);
-    } catch (const Raytracer::Exceptions::Base &e) {
-        std::cerr << e.what() << std::endl;
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--config") {
+            if (i + 1 < argc) {
+                path = argv[i + 1];
+            }
+        } else if (std::string(argv[i]) == "--fast") {
+            fast = true;
+        }
+    }
+
+    bool success = manager.parse(path);
+
+    if (!success) {
         return 84;
     }
+
+    manager.bootstrap();
+    manager.render(fast);
 
     return 0;
 }
