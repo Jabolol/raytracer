@@ -35,6 +35,7 @@ namespace Raytracer::Arguments
         ARG_QUAD,
         ARG_SPHERE,
         ARG_SPHERE_MOVING,
+        ARG_BOX,
     };
 }
 
