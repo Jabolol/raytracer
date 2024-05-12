@@ -4,9 +4,17 @@ int main(int argc, char **argv)
 {
     Raytracer::Config::Manager manager;
 
+    std::string usage = "Usage: " + std::string(argv[0])
+        + " [--fast] --config <config file>\n";
+
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <config file>" << std::endl;
+        std::cerr << usage;
         return 84;
+    }
+
+    if (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h") {
+        std::cout << usage;
+        return 0;
     }
 
     bool fast = false;
